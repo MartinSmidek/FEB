@@ -1,0 +1,45 @@
+#pragma switch,if
+# ------------------------------------------------------------------------------------------------ #
+# Aplikace pro Farní evangelizační buňky                                                           #
+#                                                                                                  #
+# Ezer3                                                  (c) 2017 Martin Šmídek <martin@smidek.eu> #
+# ------------------------------------------------------------------------------------------------ #
+var dbg: object
+menu feb { title:'feb', type:'main', active:*, _sys:'*'
+  tabs ora  {title:"[fa-bell-o] Buňky", _sys:'*', include:'onload', active:* }
+  tabs doc  {title:"Nápověda", _sys:'*',  include:'onload,ezer2.help' active:* }
+  tabs syst {title:"Systém",  include:'onload,ezer2.syst', _sys:'sys'
+    panel pers {type:'right', title:'Osobní nastavení', _sys:'*', include:'onload,ezer2.pers'}
+    panel data {type:'right', title:'Data', _sys:'nas', skill:'a'
+      menu {type:'left', active:*
+        menu {title:'Ladící data',type:'group', _sys:'*'
+          item {title:'nic takového!' }
+          item {title:'tabulka LIDI (náhodně))'
+            proc onclick (i) {
+              confirm("opravdu mám položky v tabulce LIDI zaměnit náhodnými údaji?");
+              info.fill(conc(i.owner.title,' - ',i.title),'... probíhá výpočet ...');
+              info.fill('',ask('feb_random','lidi')) 
+          }}
+          item {title:'tabulka FARA (arcibol)'
+            proc onclick (i) {
+              confirm("opravdu mám položky v tabulce FARA zaměnit údaji z OL?");
+              info.fill(conc(i.owner.title,' - ',i.title),'... probíhá výpočet ...');
+              info.fill('',ask('feb_fara','lidi')) 
+          }}
+        }
+      }
+      use info: form right [12,4,,]
+    }
+  }
+}
+// univerzální formulář pro levostranné menu
+form right [,,700,50] {
+  label info [0,0,680,600] { title:'' }
+  label head [0,0,680,50]  { title:'' }
+  label note [0,50,680,550] { title:'' }
+  proc fill(x,y) {
+    [ x; head.set(conc("<div class='karta'>",x,"</div>")) ];
+    [ y; note.set(y) ]
+  }
+  proc append(x) { note.get; note.set(conc(note.get,'<br>',x)) | note.set(x) }
+}
