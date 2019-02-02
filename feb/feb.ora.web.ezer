@@ -1,0 +1,231 @@
+// ---------------------------------------------------------------------------------------------- //
+// Aplikace pro Farní evangelizační buňky - jednoduché CMS                                        //
+//                                                                                                //
+// Ezer3                                                (c) 2018 Martin Šmídek <martin@smidek.eu> //
+// ---------------------------------------------------------------------------------------------- //
+group p { 
+  var do_go=1
+  var last='home'       //'home'
+  var full_page=0       // ukázat celou stránku
+  var TEST=0            // předat jako Ezer.cms.TEST a $EZER->CMS->TEST
+  var history: array, top=-1
+  use c: form _c [0,0,,]
+  use w: form _w [0,30,,]
+  proc onstart() { var gets:object
+    gets.set(function('return Ezer.get;'));
+    last.set(cconc(gets.page,gets.page,'home'));
+    function('return admin(0)');
+    c.full.set(full_page.get);
+    go_menu(last.get);
+  }
+  use w: form _w [0,30,,]
+# ----------------------------------------------------------------------------==> emulace událostí
+  var page: object // {html,edit,id}
+  proc cms_go(ref) { echo("přepnutí webu na ",ref); do_go.get; go(ref) }
+  proc cms_menu(ref) { echo("přepnutí dle menu ",ref); do_go.get; go_menu(ref) }
+  proc refresh() { cms_go(last.get); }
+  proc go(ref) { 
+    echo('go ',ref);
+    history.set(last.get);
+    last.set(ref);
+    c.verze.set(sys('ezer','version')); 
+    page.set(ask('page',ref,full_page.get,has_skill('a')));
+    w.page.set(page.get('html'));
+    function("return jump_fokus();");
+  }
+  proc go_menu(ref) { 
+    echo('go_menu ',ref);
+    history.set(last.get);
+    last.set(ref);
+    c.verze.set(sys('ezer','version')); 
+    page.set(ask('page',ref,full_page.get,has_skill('a')));
+    w.page.set(page.get('html'));
+  }
+# ----------------------------------------------------------------------------==> control bar
+  form _c [,,*,30] { css:'admin', style:'position:sticky;z-index:1002'
+    proc hide_all() { CMS.hide }
+    button [80,5,,]  { title:"[fa-chevron-left]"    
+      proc onclick() { hide_all; go(history.get) } }
+    button [101,5,,] { title:"[fa-repeat]"          
+      proc onclick() { hide_all; cms_go(last.get) } }
+    button [123,5,,] { title:"[fa-chevron-right]", format:'d'
+      proc onclick() { hide_all } }
+    button [300,5,,] { title:"[fa-edit] Editovat zobrazený článek, akci, buňku"
+      proc onclick() { 
+        eq('akce',page.get('edit')); EDITOR.Akce(page.get('id')); refresh 
+      | eq('bunka',page.get('edit')); EDITOR.Bunka(page.get('id')); refresh 
+      | eq('clanek',page.get('edit')); EDITOR.Clanek(page.get('id')); refresh 
+    }}
+    check full [150,5,100,] { title:"celá stránka"
+      proc onchange() { full_page.set(this.get); cms_go(last.get) } }
+    button [-95,5,,] { skill:'a|a', title:"[fa-gears] CMS" 
+      proc onclick() { 
+        hide_all; 
+        CMS.modal 
+    } }
+    check test [-190,5,65,] { title:"TEST", value:'0', style:'color:white'
+      proc onchange() { 
+        TEST.set(this.get); 
+        function('x',"Ezer.cms.test=x;return 1;",TEST.get); 
+        ask('cms_def_test',TEST.get);
+    } }
+    label verze [-150,8,40,] { title:'ezer', style:'font-size:10pt;color:white' } 
+//    button [-35,5,,] { title:"odhlásit", style:'z-index:999'
+//      proc onclick() { var ref:text
+//        //logout;
+//        ask('server',°{cmd:'be_logout'});
+//        ref.set(conc(function("return Ezer.web.index"),"?page=",last.get));
+//        function('ref',"location.href= ref;",ref);
+//    } }
+    button [-10,5,,] { skill:'a|a', title:"[fa-bars]"           proc onclick() { hide_all; } }
+  }
+# ----------------------------------------------------------------------------==> web page
+  form _w [,,*,*] { style:"position:initial"
+    label page { css:'cms_page' }
+    label mapa { type:'map', css:'cms_mapa' }
+  }
+}
+# ----------------------------------------------------------------------------==> CMS
+panel CMS [0,0,600,296] { type:'popup',  title:'CMS - definice menu', par:°{min_top:30}
+  var web=2, from_table= 1
+  use a: area a_
+  use u: form _u [210,0,,] 
+  use d: form _d [210,50,,] 
+  proc onfirstfocus() { 
+    a.menu;
+    function('panel',"return panel.DOM.addClass('transparent');",this);
+    a.curr_id.set('menu.main menu');
+    a.select_curr;
+  }
+  // designové informace
+  form _d [,,375,84] { css:'bily_ram'
+    label i_nazev [56,3,320,] 
+    field x_nazev [10,17,201,] { title:"^název:" 
+      proc onchanged() { u.nazev.set(this.get); i_nazev.set(this.get); u.nazev.change }}
+    check x_show [227,17,84,] { title:"viditelný"
+      proc onchange() {
+        [ gt(this.get,0); u.typ.set(function('x',"return Math.abs(x);",u.typ.get))
+        | u.typ.set(function('x',"return -Math.abs(x);",u.typ.get))
+        ]; u.typ.change
+    }}
+    check x_test [305,17,75,] { title:"jako test"
+      proc onchange() {
+        [ gt(this.get,0); u.level.set(16)
+        | u.level.set(0)
+        ]; u.level.change
+    }}
+    field x_elem [10,55,364,] { title:"^definice zobrazení" 
+      proc onchanged() { u.elem.set(this.get); u.elem.change }}
+  }
+  area a_ { 
+    title:"<div id='tree' style='width:206px;height:300px;overflow:auto'></div>"
+    var curr_id:text, curr_data:object // index a data nastaveného node
+    proc tree_subtree(id) {
+      return(function('area','id',"return area.tree.get(id).nodes.length;",this,id));
+    }
+    proc show_menu(node) {
+      copy_by_name(node,u);
+      d.x_nazev.set(u.nazev.get); d.i_nazev.set(u.nazev.get);
+      d.x_elem.set(u.elem.get);  
+      d.x_show.set(cconc(gt(u.typ.get,0),1,0)); 
+      d.x_test.set(cconc(eq(u.level.get,16),1,0)); 
+    }
+    menu { type:'context'
+      // ----------------------------- nový článek
+      item { title:'nový článek tohoto menu' proc onclick() { 
+        ask('menu_add_elem',u.mid.get,'clanek'); a.menu
+      }}
+      // ----------------------------- posuny
+      item { title:'-posuň menu dolů' proc onclick() { 
+        ask('menu_shift',u.mid.get,1); a.menu
+      }}
+      item { title:'posuň menu nahoru' proc onclick() { 
+        ask('menu_shift',u.mid.get,0); a.menu
+      }}
+      // ----------------------------- vytvoření podmenu
+      item { title:'-vlož podmenu' proc onclick() { var root:object, root_id:text, node:object
+        root.set(curr_data.get); root_id.set(curr_id.get);
+        echo('root ',curr_id.get,debug(curr_data.get));
+        // vkládat lze buďto nové top|main menu nebo submenu pod uložený root (s definovaným mid)
+        or(eq(curr_id.get,'menu.top menu','menu.main menu'),root.mid);
+        node.set(a.tree_insert(curr_id.get));
+        curr_id.set(node.id); 
+        a.tree_select(curr_id.get);
+        curr_data.set(object('wid',web.get,
+            'mid',0,
+            'mid_top',root.mid,
+            'ref',conc(root.ref,'-',tree_subtree(root_id)),
+            'nazev',conc(root.ref,' ',tree_subtree(root_id)),
+            'rank',tree_subtree(root_id),
+            'typ',cconc(eq(root_id,'menu.top menu'),0,eq(root_id,'menu.main menu'),1,2),
+            'level',root.level
+        ));
+        a.tree_update(curr_id.get,0,curr_data.get);
+        show_menu(curr_data.get);
+        echo('new ',curr_id.get,debug(curr_data.get));
+      | warning("napřed je třeba menu uložit do tabulky")
+      }}
+      // ----------------------------- zrušení podmenu
+      item { title:'odstraň menu' proc onclick() { 
+        curr_id.set(a.tree_remove(curr_id.get)) 
+      }}
+    }
+    proc select_curr() {
+      a.tree_select(curr_id.get);
+    }
+    proc menu() { var obj:object
+      obj.set(ask('menu_tree',web.get));
+      this.tree_show(obj,'tree');
+      a.tree_expand(u.tree_level.get);
+    }
+    // dat=node.data tzn. vše z tx_gnmenu
+    proc tree_onclick(fid,id,dat,com,x,txt,txts) { var i:text
+      u.init; 
+      { dat; 
+        curr_id.set(fid); curr_data.set(dat);
+        show_menu(dat);
+      | u.enable(0)
+      }
+    }
+  }
+  form _u [,,400,300] { css:'popup-right'
+    // ovládání
+    var tree_level=99
+    button [10,10,,] { title:"[fa-play]", help:"zobraz 2 úrovně menu"
+      proc onclick() { 
+        tree_level.set(2); a.tree_expand(tree_level.get) }}
+    button [30,10,,] { title:"[fa-forward]", help:"zobraz všechny úrovně menu"
+      proc onclick() { 
+        tree_level.set(99); a.tree_expand(tree_level.get) }}
+    button uloz [60,10,,] { title:"[fa-database] Ulož do tabulky"
+      proc onclick() {
+        save_info.set(ask('menu_save',web.get,a.tree_dump));
+        u.plain; d.plain; a.menu; p.refresh; }}
+    button [178,10,,] { title:"[fa-undo] Zpět", help:"bez uložení do tabulky"
+      proc onclick() {
+        a.menu; p.refresh }}
+    button [238,10,,] { title:"[fa-undo] Vrať předchozí menu"
+      proc onclick() {
+        ask('menu_undo',web.get); a.menu; p.refresh }}
+    // technické informace
+    label save_info [5,176,578,]  
+    field mid [5,206,35,] { title:"^mid" }
+    field mid_top [49,206,35,] { title:"^top" }
+    field mid_sub [94,206,35,] { title:"^sub" }
+    field typ [153,206,22,17] { title:"^typ" }
+    field rank [186,206,22,17] { title:"^rank" }
+    field level [218,206,22,17] { title:"^level" }
+    field ref [6,239,79,] { title:"^ref" 
+      proc onchanged() { 
+      confirm("Po změně reference je třeba menu uložit do tabulky");
+      uloz.onclick
+    }}
+    field nazev [97,239,146,] { title:"^název" }
+    field title [256,239,127,] { title:"^title" }
+    field elem [5,272,378,] { title:"^definice obsahu" }
+    proc onchanged(elem) {
+      echo(elem.id); a.curr_data.set(elem.get,elem.id); //elem.plain;
+    }
+  }
+}
+

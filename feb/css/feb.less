@@ -1,0 +1,193 @@
+// ----------------------------------------------------------------------------------- parametrizace
+@path: "../../skins/ch";
+@b_work: #97bef7;
+@b_parm: #ef7f13;
+
+// barvy pro browse se skinem ch
+@b_brow:  #ccc;      
+@b2_brow: #fff; 
+@b3_brow: #fff; 
+@b4_brow: #e6e6e6;
+@b5_brow: #e6e6e6; 
+@b6_brow: #e6e6e6; 
+@b7_brow: #c0cae2; 
+@b8_brow: #EFF1FD;
+@c_brow:  #4d4d4d; 
+@s1_brow: #365faf;
+@s2_brow: #a90533;
+
+// barvy 
+@b_left:   #C0E2C2;;
+@b_middle: #afe5e5;
+@b_right:  @b_work;
+
+.shadow-feb-box  { 
+  box-shadow:  
+    -1px  1px 0px #97bdc0, 
+     1px -1px 0px #97bdc0, 
+    -1px -1px 0px #97bdc0,
+     3px  3px 7px #97bdc0;}
+
+// --------------------------------------------------------------------------------------------- CMS
+div.admin {
+  background-color: #ef7f13; }
+div.cms_page {
+  height: 100%; width: 100%; font-size: 12pt; }
+.bily_ram { 
+  border: 1px solid #fff; color:#fff !important; border-radius: 5px; 
+  padding: 1px 6px; font-weight: bold; }
+div.Popup3 {
+  z-index: 1002;
+  &.transparent { 
+    background-color: #c0e2c2db; z-index: 1003; }
+}
+div.Radio3 {
+  border: 1px solid #aaa; } 
+div#horni { 
+  flex-basis:63px; }
+div#dolni, div#status_bar, div#paticka {
+    z-index: 2001;}
+div.EditHtml3 iframe body img {
+  max-width: 100% !important; }
+
+.cke_top { padding: 6px 0 0 6px !important; }
+.cke_voice_label,
+.cke_button_label,
+.cke_combo_label { display: none !important; }
+a.cke_button { padding: 3px 4px !important; }
+a.cke_button_off:hover, a.cke_button_off:focus, a.cke_button_off:active {
+  border:none !important; outline: 1px solid #bcbcbc; }
+.cke_combo_text { padding-left: 6px !important; line-height: 24px !important; }
+.cke_combo_open { height: 18px !important; line-height: 16px !important;}
+.cke_combo_arrow { margin: 10px 0 0 !important; }
+
+// --------------------------------------------------------------------------------------------- ORA
+.left {
+  background-color:@b_left !important; }
+.middle {
+  background-color:@b_middle !important; }
+.right {
+  background-color:@b_right !important; }
+
+
+div.relace ul { max-height:none; }
+.relace input, .Label3.relace, .Check3.relace { 
+  font-weight: bold; font-size: 12pt; background-color:#00000022; border: none; }
+.rel { 
+  background-color:@b_middle; z-index:0; border-radius:5px; 
+  .shadow-feb-box; }
+
+.parm_off { 
+  background-color:transparent !important; }
+
+/*div.work { 
+  box-shadow: 2px 2px 4px #567; }*/
+.ch.work { 
+  background-color:@b_work; z-index:0; border-radius:5px; }
+.ch.parm { 
+  background-color:@b_parm; border:1px solid #f5f5f5; z-index:0; border-radius:5px; }
+/*.ch.karta { 
+  background:@b_group url("@{path}/doc_menu.gif") no-repeat left center; color:@c_group; overflow:hidden;
+  font-size:14px; font-weight:bold; margin:2px 0; padding:5px 50px; clear:both; white-space:nowrap;
+}*/
+// obecné barvy písma 
+.bila    { color:#fff; }
+.seda    { color:#777; }
+.cervena { color:#f00; }
+.zelena  { color:#0f0; }
+.modra   { color:#00f; }
+.cerna   { color:#000; }
+.nic     { }
+.skrt    {  text-decoration: line-through; color: grey !important; }
+
+// obecné barvy pozadí 
+.bily           { background-color:#ffffff !important; }
+.sedy           { background-color:#aaaaaa !important; }
+.zluty          { background-color:#ffff77 !important; }
+.cerveny        { background-color:#ff7777 !important; }
+.oranzovy       { background-color:#ffaa00 !important; }
+.zeleny         { background-color:#77ff77 !important; }
+.modry          { background-color:#7389ae !important; }
+.azurovy        { background-color:#77ffff !important; }
+.fialovy        { background-color:#d27efc !important; }
+
+// sestavy
+div.stat        { 
+  padding-right:5px; font-size:8pt;
+  table { 
+    border-collapse:collapse; font-size:8pt; width:100%; }
+  td { 
+    border:1px solid #777; background-color:#fff; padding:0 3px;}
+  th { 
+    border:1px solid #777; background-color:#C0E2C2; }
+  dt { 
+    margin:10px 0 0 0; }
+}
+
+// ------------------------------------------------------------------------------------==> Browse ch
+
+.ch .BrowseSmart table {
+  background-color:@b_brow; border:1px solid @s1_brow; 
+  /* hlavička */
+  td.th {
+    background:url("@{path}/browse_header.png") repeat-x center -1px; color:@c_brow; }
+  td.ShowSort:hover {
+    background:transparent url("@{path}/browse_sort_hover.png") }
+  /* dotazy */
+  td.BrowseNoQry {
+    background-color:@b6_brow; border-left:1px solid @b_brow; border-bottom:1px solid @b_brow;  }
+  td.BrowseQry {
+    border-left:1px solid @b_brow; border-bottom:1px solid @b_brow; }
+  .BrowseQry input {
+    background-color:@b8_brow;  }
+  /* řádky */
+  td {
+    border-left:1px solid @b_brow; border-bottom:1px solid @b_brow;  }
+  td.tag0 {
+    background-color:@b7_brow; }
+  td.tag1 {
+    background-image:url("@{path}/browse_mark2.gif"); }
+  td.tr-even {
+    background-color:@b2_brow; }
+  td.tr-odd {
+    background-color:@b4_brow; }
+  .tr-sel {
+    color:@s2_brow !important; }
+  /* reload */
+  td.BrowseReload {
+    background:url("@{path}/browse_reload.png") no-repeat !important; }
+  /* posuvník */
+  td.BrowseSet {
+    background:url("@{path}/browse_set.png") no-repeat !important; }
+  div.BrowsePosuv {
+    background-color:@b5_brow; }
+  .BrowseUp, .BrowseDn, .BrowseHandle {
+    background-color:@b5_brow; }
+  .BrowseUp       { 
+    background-image:url("@{path}/browse_pgup0.png"); }
+  .BrowseUp.act   { 
+    background-image:url("@{path}/browse_pgup.png"); }
+  .BrowseUp.act:hover { 
+    background-image:url("@{path}/browse_pgup_act.png"); }
+  .BrowseDn       { 
+    background-image:url("@{path}/browse_pgdn0.png"); }
+  .BrowseDn.act   { 
+    background-image:url("@{path}/browse_pgdn.png"); }
+  .BrowseDn.act:hover { 
+    background-image:url("@{path}/browse_pgdn_act.png"); }
+  .BrowseHandleUp   {
+    background-image:url("@{path}/browse_handle_up.png"); }
+  .BrowseHandleMi   {
+    background-image:url("@{path}/browse_handle_mi.png"); }
+  .BrowseHandleMi:hover {
+    background-image:url("@{path}/browse_handle_act_mi.png"); }
+  .BrowseHandleDn   {
+    background-image:url("@{path}/browse_handle_dn.png"); }
+  div.BrowseHandle:hover { 
+    background-image:url("@{path}/browse_handle_act.png"); }
+  /* patička */
+  th {
+    background:url("@{path}/browse_header.png") repeat-x center center; color:@c_brow; }
+}
+// --------------------------------------------------------------------------------------------- web
+@import "web.less"; 

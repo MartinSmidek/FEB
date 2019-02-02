@@ -722,6 +722,6 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
   }
 }
 // rozesílání mailů
-//panel mai { type:'plain', title:'[fa-envelope] Maily', _sys:'*', include:'onload' } 
+panel mai { type:'plain', title:'[fa-envelope] Maily', _sys:'*', include:'onload' } 
 // CMS sdruženého webu
 panel web { type:'plain', title:'[fa-laptop] Web', _sys:'*', include:'onload' } 
