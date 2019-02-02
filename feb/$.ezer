@@ -45,14 +45,14 @@ form right [,,700,50] {
   }
   proc append(x) { note.get; note.set(conc(note.get,'<br>',x)) | note.set(x) }
 }
-# ==========================================================================================> EDITOR
+# ==============================================================================> EDITOR
 panel EDITOR [0,0,710,530] { title:' Úprava článku na webu', type:'popup'
   var id:number,
       path:text
   use a: form _a [0,0,,] { tag:'a', format:'n' }
   use b: form _b [0,0,,] { tag:'b', format:'n' }
   use c: form _c [0,0,,] { tag:'c', format:'n' }
-  use d: form _c [0,0,,] { tag:'d', format:'n' }
+  use d: form _d [0,0,,] { tag:'d', format:'n' }
   proc Akce(_key) {
     id.set(_key);
     panel.display(2,'a'); 
@@ -183,7 +183,7 @@ panel EDITOR [0,0,710,530] { title:' Úprava článku na webu', type:'popup'
   }
   # -----------------------------------------------------------------------------==> edit mail
   # oprava textu mailu
-  form _c [10,10,710,460] {
+  form _d [10,10,710,460] {
     button  [-121,5,,] { title:'Uložit', help:'ukončit editor a uložit změny'
       proc onclick() { form.save; panel.hide(1); }}
     button  [-75,5,,] { title:'Zpět', help:'ukončit editor bez uložení změn'
