@@ -1,20 +1,8 @@
 <?php
-# ------------------------------------------------------------------------------------------ IP test
-
-//$ips= array(0,
-////   '88.86.120.249',                                      // chlapi.online
-////   '89.176.167.5','94.112.129.207',                      // zdenek
-//  '83.208.101.130','80.95.103.170',                     // martin
-//  '127.0.0.1','192.168.1.146'                           // local
-//);
-
-//$ip= my_ip();
-//$ip_ok= in_array($ip,$ips);
-//if ( !$ip_ok ) die('Error 404');
-
 # -------------------------------------------------------------------- identifikace ladícího serveru
+$root= 'feb';
 $ezer_localhost= preg_match('/^localhost|^192\.168\./',$_SERVER["SERVER_NAME"])?1:0;
-$ezer_local= $ezer_localhost || preg_match('/^\w+\.ezer|ezer\.\w+/',$_SERVER["SERVER_NAME"])?1:0;
+$ezer_local= $ezer_localhost || preg_match('/^\w+\.bean/',$_SERVER["SERVER_NAME"])?1:0;
 if ( !isset($_SESSION) ) session_start();
 # ----------------------------------------------------------------------------------------------- js
 $js= <<<__EOD
@@ -43,9 +31,12 @@ if ( isset($_GET['op']) ) {
 }
 # ------------------------------------------------------------------------------------------- client
 $all= true;
-$icon= $ezer_local ? "cms/img/ses_local.png" : "cms/img/ses.png";
+$icon= $ezer_local ? "$root/img/ses_local.png" : "$root/img/ses.png";
 $time= isset($_SESSION['ans']['stamp']) ? time()-$_SESSION['ans']['stamp'] : '';
-$feb= isset($_SESSION['feb']) ? debug($_SESSION['feb'],'FEB') : 'null FEB';
+$web= isset($_SESSION[$root]) ? debug($_SESSION[$root],'WEB') : 'null WEB';
+$ans= isset($_SESSION['ans']) ? debug($_SESSION['ans'],"ANS $time") : 'null ANS';
+$cms= $all ? debug($_SESSION,'SESSION')
+    : (isset($_SESSION['cms']) ? debug($_SESSION['cms'],'CMS') : 'null CMS');
 
 echo <<<__EOD
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
@@ -76,13 +67,17 @@ echo <<<__EOD
   <body>
     <div id='cmd'>
       <button onclick="op('reload.');">reload</button>
-      <button onclick="op('clear.feb');">clear FEB</button>
+      <button onclick="op('clear.web');">clear WEB</button>
+      <button onclick="op('clear.ans');">clear ANS</button>
+      <button onclick="op('clear.cms');">clear CMS</button>
       <button onclick="op('destroy.');">destroy SESSION</button>
       <button onclick="op('phpinfo.');">phpinfo</button>
-      <button onclick="op('all.');">all SESSION</button>
+      <button onclick="op('all.');">whole SESSION</button>
     </div>
     <div id='paticka'>
-      <div class='dbg' style="position:absolute;top:50px;width:30%;left:0%">$feb</div>
+      <div class='dbg' style="position:absolute;top:50px;width:30%;left:0%">$web</div>
+      <div class='dbg' style="position:absolute;top:50px;width:25%;left:30%">$ans</div>
+      <div class='dbg' style="position:absolute;top:50px;width:45%;left:60%">$cms</div>
     </div>
   </body>
 </html>
@@ -105,13 +100,11 @@ function debug($gt,$label=false,$options=null) {
     $x= debugx($gt,$label,$html,$depth,$length,$win1250,$gettype);
   }
   else {
-//     $x= $html ? htmlentities($gt) : $gt;
     $x= $html ? htmlspecialchars($gt,ENT_NOQUOTES,'UTF-8') : $gt;
     $x= "<table class='dbg_array'><tr>"
       . "<td valign='top' class='title'>$label</td></tr><tr><td>$x</td></tr></table>";
   }
   if ( $win1250 ) $x= wu($x);
-//   $x= strtr($x,'<>','«»'); //$x= str_replace('{',"'{'",$x);
   $trace.= $x;
   return $x;
 }
@@ -141,22 +134,10 @@ function debugx(&$gt,$label=false,$html=0,$depth=64,$length=64,$win1250=0,$getty
     foreach($gt as $g => $t) {
       $len++;
       if ( $len>$length ) break;
-//       if ( is_string($t) ) {
-//         $x.= "<td>$g:$t</td>";
-//       }
-//       if ( $g=='parent' ) {
-//         $td= $t==null ? "<td class='label'>nil</td>" : (
-//           is_object($t) && isset($t->id) ? "<td class='label'>{$t->id}</td>" : (
-//           is_string($t) ? "<td>$t</td>" :
-//           "<td class='label'>?</td>"));
-//         $x.= "<tr><td class='dbg_over'>$g:</td>$td</tr>";
-//       }
-//       else {
-        $x.= "<tr><td valign='top' class='label'>$g:</td><td>"
-        . debugx($t,NULL,$html,$depth,$length,$win1250,$gettype) //TEST==1 ? $t : htmlspecialchars($t)
-        .($gettype ? "</td><td>".gettype($t) : '')                      //+typ
-        ."</td></tr>";
-//       }
+      $x.= "<tr><td valign='top' class='label'>$g:</td><td>"
+      . debugx($t,NULL,$html,$depth,$length,$win1250,$gettype) //TEST==1 ? $t : htmlspecialchars($t)
+      .($gettype ? "</td><td>".gettype($t) : '')                      //+typ
+      ."</td></tr>";
     }
     $x.= "</table>";
     $debug_level--;
@@ -165,9 +146,7 @@ function debugx(&$gt,$label=false,$html=0,$depth=64,$length=64,$win1250=0,$getty
     if ( is_object($gt) )
       $x= "object:".get_class($gt);
     else
-//       $x= $html ? htmlentities($gt) : $gt;
       $x= $html ? htmlspecialchars($gt,ENT_NOQUOTES,'UTF-8') : $gt;
-//       if ( is_string($x) ) $x= "'$x'";
   }
   return $x;
 }
