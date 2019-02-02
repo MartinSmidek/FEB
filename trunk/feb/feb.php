@@ -1,119 +1,60 @@
 <?php
-  // nastavení zobrazení PHP-chyb klientem při &err=1
-  if ( isset($_GET['err']) && $_GET['err'] ) {
-    error_reporting(E_ALL ^ E_NOTICE);
-    ini_set('display_errors', 'On');
-  }
+
+  // volba verze jádra Ezer
+  $kernel= "ezer".(isset($_GET['ezer'])?$_GET['ezer']:'3'); 
 
   // rozlišení lokální a ostré verze
   $ezer_local= preg_match('/^\w+\.bean$/',$_SERVER["SERVER_NAME"])?1:0;
 
-  $ezer_root= 'feb';
-  $skin= 'ck';
-
-  // parametry aplikace
-  $app=      'feb';
-  $app_name= 'evangelizační buňky';
-  $CKEditor= isset($_GET['editor'])  ? $_GET['editor']  : '4.6';
-  $dbg=      isset($_GET['dbg'])     ? $_GET['dbg']     : 1;                          /* debugger */
-  $gapi=     isset($_GET['gapi'])    ? $_GET['gapi']    : 0; //!($ezer_local || $ezer_ksweb);
-  $gmap=     isset($_GET['gmap'])    ? $_GET['gmap']    : 0; //!($ezer_local || $ezer_ksweb);
-  //$verze se nastavuje v feb.php.inc
-
-  // inicializace SESSION
-  if ( !isset($_SESSION) ) {
-    session_unset();
-    session_start();
-  }
-  $_SESSION[$app]['GET']= array();
-
-  if ( $ezer_local ) {
-    // lokální cesty 
-    $rel_root= "feb.bean:8080";
-    $abs_root= "C:/Ezer/beans/feb";
-  }
-  else {
-    $rel_root= "feb.ezer.cz";
-    $abs_root= "/home/users/gandi/ezer.cz/web/feb";
-  }
-  $_SESSION[$app]['abs_root']= $abs_root;
-  $_SESSION[$app]['rel_root']= $rel_root;
-  $_SESSION[$app]['app_path']= "";
-  // kořeny pro LabelDrop
-  $path_files_href= "";
-  $path_files_s= "$abs_root/";
-  $path_files_h= substr($abs_root,0,strrpos($abs_root,'/'))."/files/$app/";
-
-  set_include_path(get_include_path().PATH_SEPARATOR.$abs_root);
-  $_POST['root']= $ezer_root;
-  require_once("$app.inc.php");
+  // parametry aplikace FEB
+  $app_name=  'evangelizační buňky';
+//  $app_login= 'Guest/';                   // pouze pro automatické přihlášení
+  $app_root=  'feb';
+  $skin=      'ck';
+  $app_js=    array("/feb/feb_fce.js","/$kernel/client/ezer_cms3.js");
+  $app_css=   array("/feb/css/feb.css","/feb/css/edit.css","/$kernel/client/ezer_cms3.css");
+  $abs_roots= array("/home/users/gandi/ezer.cz/web/feb","C:/Ezer/beans/feb");
+  $rel_roots= array("http://feb.ezer.cz","http://feb.bean:8080");
+  $kontakt=   "V případě zjištění problému nebo <br/>potřeby konzultace mi prosím napište<br/>
+      na mail martin<i class='fa fa-at'></i>smidek.eu případně zavolejte 306&nbsp;150&nbsp;565
+      <br/>Za spolupráci děkuje <br/>Martin Šmídek";
   
-  $http= $ezer_local ? 'http' : 'http';
-  $cms= "$http://$rel_root/$ezer_root";
-  $client= "$http://$rel_root/{$EZER->version}/client";
-  $licensed= "$client/licensed";
-
-  // -------------------------------------------------------------------------------------- Ezer 3
-  $js= array_merge(
-    // ckeditor 
-    array("$licensed/ckeditor$CKEditor/ckeditor.js"),
-    array("$licensed/pikaday/pikaday.js"),
-    array("$licensed/jquery-3.2.1.min.js","$licensed/jquery-noconflict.js","$client/licensed/jquery-ui.min.js"),
-    // jádro Ezer3
-    array(
-      "$client/ezer_app3.js","$client/ezer3.js","$client/ezer_area3.js","$client/ezer_rep3.js",
-      "$client/ezer_fdom3.js","$client/ezer_lib3.js","$client/ezer_tree3.js"
-    ),
-    // rozhodnout zda používat online mapy
-    $gmap ? array(
-      "https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/markerclusterer.js",
-      "https://maps.googleapis.com/maps/api/js?sensor=false") : array(),
-    // uživatelské skripty
-    array("$cms/feb_fce.js"),
-    // end
-    array()
+  $add_options= (object)array(
+    'mini_debug' => 1,
+    'path_files_href' => "'$rel_roots[$ezer_local]'",
+    'path_files_s' => "'$abs_roots[$ezer_local]/'"  // absolutní cesta pro přílohy
   );
-  $css= array(
-    "$client/ezer3.css.php=skin",
-    "feb/feb.css.php",
-    "$client/licensed/font-awesome/css/font-awesome.min.css",
-    "$client/licensed/pikaday/pikaday.css","$client/licensed/jquery-ui.min.css"
-  );
-  
-  // přihlášení pro ladění FEB
-  $options= (object)array(              // přejde do Ezer.options...
-    'curr_version' => 0,                // při přihlášení je nahrazeno nejvyšší ezer_kernel.version
-    'must_log_in' => 0,
-    'path_files_href' => "'$path_files_href'",  // relativní cesta do složky docs/{root}
-    'path_files_s' => "'$path_files_s'",        // absolutní cesta do složky docs/{root}
-    'path_files_h' => "'$path_files_h'"         // absolutní cesta do složky ../files/{root}
-  );
-  $kontakt= " V případě zjištění problému nebo <br/>potřeby konzultace mi prosím napište<br/>
-        na mail&nbsp;<a href='mailto:{$EZER->options->mail}{$EZER->options->mail_subject}'>{$EZER->options->mail}</a> "
-      . ($EZER->options->phone ? "případně zavolejte&nbsp;{$EZER->options->phone} " : '')
-      . ($EZER->options->skype ? "nebo použijte Skype&nbsp;<a href='skype:{$EZER->options->skype}?chat'>{$EZER->options->skype}</a>" : '')
-      . "<br/>Za spolupráci děkuje <br/>{$EZER->options->author}";
-
-  $pars= (object)array(
-    'favicon' => "{$app}_local.png",
-    'app_root' => "$rel_root",      // startovní soubory app.php a app.inc.php jsou v kořenu
-    'dbg' => $dbg,                                                                    /* debugger */
-    'watch_ip' => false,
-    'watch_key' => false,
-    'autologin' => 'Guest/',
-    'contact' => $kontakt,
+  $add_pars= array(
     'CKEditor' => "{
-      version:'$CKEditor',
-      EzerHelp2:{
-        toolbar:[['PasteFromWord','-','Bold','Italic','TextColor','BGColor',
-          '-','JustifyLeft','JustifyCenter','JustifyRight',
-          '-','Link','Unlink','HorizontalRule','Image',
-          '-','NumberedList','BulletedList',
-          '-','Outdent','Indent',
+      version:'4.6',
+      FEB:{
+        skin:'moono-lisa',
+        toolbar:[['Maximize','Styles','-','Bold','Italic','TextColor','BGColor', 'RemoveFormat',
+          '-','JustifyLeft','JustifyCenter','JustifyRight','JustifyBlock', 'Outdent', 'Indent', 'Blockquote',
+          '-','NumberedList','BulletedList','Table',
+          '-','Link','Unlink','HorizontalRule','Image','Embed',
           '-','Source','ShowBlocks','RemoveFormat']],
-        extraPlugins:'ezersave,imageresize', removePlugins:'image'
+        // Configure the Enhanced Image plugin to use classes instead of styles and to disable the
+        // resizer (because image size is controlled by widget styles or the image takes maximum
+        // 100% of the editor width).
+        image2_alignClasses: [ 'image-align-left', 'image-align-center', 'image-align-right' ],
+        image2_disableResizer: false,
+        extraPlugins:'widget,filetools,embed,ezer',
+        entities:true,  // →
+        embed_provider: '//iframe.ly/api/oembed?url={url}&callback={callback}&api_key=313b5144bfdde37b95c235',
+        uploadUrl:'feb/upload.php?root=feb&type=Images',
+        stylesSet:[
+          {name:'název',     element:'h1'},
+          {name:'nadpis',    element:'h2'},
+          {name:'podnadpis', element:'h3'},
+          {name:'odstavec',  element:'p'},
+          {name:'odstavec!', element:'p',   attributes:{'class':'p-clear'}}
+        ],
+        contentsCss:'feb/css/edit.css'
       }
     }"
   );
-  root_php3($app,$app_name,'test',$skin,$options,$js,$css,$pars);
+  // je to standardní aplikace se startem v kořenu
+  require_once("$kernel/ezer_main.php");
+
 ?>
