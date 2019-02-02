@@ -1,0 +1,204 @@
+.shadow-img {
+  filter: drop-shadow(5px 5px 10px #567);
+}
+.shadow-box {
+  box-shadow: -1px 1px 0px #567, 1px -1px 0px #567, -1px -1px 0px #567, 5px 5px 10px #567;
+}
+.shadow-txt {
+  text-shadow: 3px 3px 3px #567, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+}
+body.body,
+div.body {
+  height: 100%;
+  margin: 0px;
+  padding: 0px;
+  /*background-color: #fff; background-image: url('./bg.jpg');*/
+  background: linear-gradient(to bottom right, #914008, #fca836, #fddc60);
+  background-attachment: fixed;
+  font-family: Tahoma, Verdana, Arial, sans-serif;
+  font-size: 80%;
+}
+body.body .obal,
+div.body .obal {
+  width: 900px;
+  margin: auto;
+  background-color: #fff;
+  border: #fff solid 4px;
+}
+body.body .header,
+div.body .header {
+  width: 100%;
+}
+body.body .header .logo,
+div.body .header .logo {
+  position: absolute;
+  margin: 10px;
+}
+body.body .header .prouzek_bg,
+div.body .header .prouzek_bg {
+  margin-top: 240px;
+  width: 900px;
+  height: 60px;
+  background-color: #000;
+  filter: alpha(opacity=50);
+  opacity: 0.5;
+  position: absolute;
+}
+body.body .header .prouzek,
+div.body .header .prouzek {
+  margin-top: 240px;
+  width: 882px;
+  padding-top: 12px;
+  color: #fff;
+  font-size: 2em;
+  text-align: right;
+  position: absolute;
+}
+body.body .header .prouzek a,
+div.body .header .prouzek a {
+  display: block;
+  float: right;
+  color: #fff;
+  font-size: 12px;
+  padding: 8px;
+  margin-left: 12px;
+  text-decoration: none;
+  border: #fff solid 2px;
+  background-color: #c00;
+}
+body.body .header h1,
+div.body .header h1 {
+  background-color: #900;
+  background-image: -moz-linear-gradient(center top, #660000, #990000);
+  color: #fff;
+  margin: 0px;
+  padding-left: 160px;
+  padding-top: 4px;
+  padding-bottom: 6px;
+  font-size: 2em;
+}
+body.body .header h1 span,
+div.body .header h1 span {
+  font-size: 16px;
+  padding-left: 200px;
+}
+body.body .header .citat,
+div.body .header .citat {
+  width: 888px;
+  background-color: #900;
+  color: #fff;
+  text-align: right;
+  padding: 6px;
+}
+body.body .header .citat span,
+div.body .header .citat span {
+  font-size: 12px;
+}
+body.body .dole,
+div.body .dole {
+  display: table;
+  min-height: 300px;
+}
+body.body .dole .menu,
+div.body .dole .menu {
+  width: 240px;
+  display: table-cell;
+  vertical-align: top;
+  background: white url('menu_bg.png');
+  background-repeat: repeat-y;
+}
+body.body .dole .menu ul,
+div.body .dole .menu ul {
+  list-style: none;
+  padding: 0px;
+  width: 214px;
+  margin: 0 0 0 6px;
+}
+body.body .dole .menu ul a,
+div.body .dole .menu ul a {
+  display: block;
+  background-color: #e5e5e5;
+  text-decoration: none;
+  border-right: #900 solid 2px;
+  padding: 6px;
+  color: #000;
+  cursor: pointer;
+}
+body.body .dole .menu ul a:hover,
+div.body .dole .menu ul a:hover {
+  background: white;
+}
+body.body .dole .menu ul a.active,
+div.body .dole .menu ul a.active {
+  background-color: #fff;
+  border-right: white solid 2px;
+}
+body.body .dole .menu ul a.active:hover,
+div.body .dole .menu ul a.active:hover {
+  border-right: white solid 2px;
+}
+body.body .dole .menu ul li ul,
+div.body .dole .menu ul li ul {
+  width: 208px;
+}
+body.body .dole .menu ul li ul li,
+div.body .dole .menu ul li ul li {
+  padding-left: 12px;
+}
+body.body .dole .menu ul li ul a,
+div.body .dole .menu ul li ul a {
+  border-right: white solid 2px;
+}
+body.body .dole .obsah,
+div.body .dole .obsah {
+  width: 660px;
+  background: white;
+  display: table-cell;
+  padding: 10px 10px 0 0;
+}
+body.body .dole .obsah span.cms_form,
+div.body .dole .obsah span.cms_form {
+  float: right;
+  display: inline-block;
+  border-radius: .4em;
+  padding: 0.1em 0.6em;
+  font-weight: bold;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: -1px 1px 0px #567, 1px -1px 0px #567, -1px -1px 0px #567, 5px 5px 10px #567;
+  margin: 0em 0.3em;
+  background-color: #E6CF73;
+  color: #000000;
+  text-align: center;
+}
+body.body .dole .obsah span.cms_form:hover,
+div.body .dole .obsah span.cms_form:hover {
+  background-color: #FFFFFF !important;
+  color: #000000 !important;
+}
+body.body .dole .obsah img,
+div.body .dole .obsah img {
+  /*margin:.2em;*/
+  height: auto !important;
+  max-width: 100%;
+}
+body.body .dole .obsah h1,
+div.body .dole .obsah h1 {
+  font-size: 14pt;
+}
+body.body .dole .obsah h2,
+div.body .dole .obsah h2 {
+  font-size: 12pt;
+}
+body.body .dole .obsah h3,
+div.body .dole .obsah h3 {
+  font-size: 11pt;
+}
+body.body .dole .obsah hr,
+div.body .dole .obsah hr {
+  height: 6px;
+  background: #900;
+  border: none;
+  clear: both;
+}
+/*# sourceMappingURL=web.css.map */
