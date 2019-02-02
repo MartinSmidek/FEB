@@ -25,7 +25,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     b_left.lst.browse_refresh; b_right.lst.browse_refresh;
   }
   proc onfirstfocus() {
-    cmd.relace.key(1); cmd.relace.change;
+    cmd.relace.key(10); cmd.relace.change;
     resize(sys('screen','width'),sys('screen','height')); 
     [ b_akce.lst.browse_load("1") ];
     [ b_cell.lst.browse_load("1") ];
@@ -179,14 +179,17 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     var oldkey= 1
     proc onstart() {
       relace.selects(conc(
-        "lidé <=> akce:1,akce <=> lidé:2,lidé <=> buňky:3,buňky <=> lidé:4,",
-        "lidé <=> farnosti:5,farnosti <=> lidé:6,buňky <=> farnosti:7,farnosti <=> buňky:8,",
-        "lidé <=> maily:9,maily <=> lidé:10,duplicity:11"
+        "lidé => akce:1,akce => lidé:2,lidé => buňky:3,buňky => lidé:4,",
+        "lidé => farnosti:5,farnosti => lidé:6,buňky => farnosti:7,farnosti => buňky:8,",
+        "lidé => maily:9,maily => lidé:10,duplicity:11"
       ));
     }
     select relace [26,12,165,] { css:'relace', format:'t'
+      proc onchanged() { onchange }
       proc onchange() {
-        [ eq(oldkey.get,9); b_lidi.lst.browse_load("!deleted") ]; 
+        [ eq(oldkey.get,9); b_lidi.lst.browse_load("!deleted") ];
+        b_lidi.CssPrijmeni("MAX(IF(lidi.web_change,1,0)+IF(IFNULL(n.web_change,0),2,0))");
+        b_lidi.adresati.display(0);
         switch(this.key,
           1,{ set_panel(b_lidi.get,f_lidi.get,r_na.get,b_akce.get,f_akce.get); },
           2,{ set_panel(b_akce.get,f_akce.get,r_na.get,b_lidi.get,f_lidi.get); },
@@ -197,14 +200,15 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
           7,{ set_panel(b_cell.get,f_cell.get,r_ve.get,b_fara.get,f_fara.get); },
           8,{ set_panel(b_fara.get,f_fara.get,r_ve.get,b_cell.get,f_cell.get); },
           9,{ set_panel(b_lidi.get,f_lidi.get,r_go.get,b_pack.get,f_pack.get); },
-         10,{ set_panel(b_pack.get,f_pack.get,r_go.get,b_lidi.get,f_lidi.get); },
+         10,{ b_lidi.CssPrijmeni("g.stav"); b_lidi.adresati.display(1);
+              set_panel(b_pack.get,f_pack.get,r_go.get,b_lidi.get,f_lidi.get); },
          11,{ set_panel(b_lidi.get,f_lidi.get,x_note.get,0,x_lidi.get);
               b_lidi.lst.browse_load(1);
               x_right.set(x_lidi.get); x_right.init; x_note.display(1); }
         );
         oldkey.set(this.key);
     }}
-    label [200,12,,] { title:'<=>', css:'relace' proc onclick() {
+    label [200,12,,] { title:'<=', css:'relace' proc onclick() {
       eq(relace.key,11);
     | eq(relace.key,1,3,5,7,9); relace.key(sum(relace.key,1)); relace.change;
     | relace.key(minus(relace.key,1)); relace.change;
@@ -212,7 +216,12 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
   }  
   // ------------------------------------------------------------- LIDI
   form _b_lidi [,,1,1] { css:'ch work'
+    proc CssPrijmeni(exp) { // nastaví wch pro barvení
+      lst.wch.set_attrib('expr',exp)
+    }
     var x_last=0  // poslední vybraný - pro duplicity, viz onchoice
+    button adresati [6,0,,] { title:'[fa-send] přidat adresáty' 
+      proc onclick() { ADRESATI.Pridej }}
     check vyber [-6,0,115,] { title:"jen vybraní", format:"t", css:'relace' proc onchange() { 
       { this.get; lst.selected('use') | lst.selected('ignore') }; lst.browse_seek 
     }}
@@ -233,7 +242,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
       // změna lidi=1, změna na=2
       show wch { expr:"MAX(IF(lidi.web_change,1,0)+IF(IFNULL(n.web_change,0),2,0))" }
       show prijmeni [,,70,] { title:'příjmení', data:lidi.prijmeni, format:'s+q*' 
-          css_cell:"wch,1:right,2:middle,3:oranzovy" }
+          css_cell:"wch,1:right,2:middle,3:oranzovy,4:zeleny,5:cerveny,6:zluty" }
       show obec [,,65,] { title:'obec', data:lidi.obec, format:'sq*' 
           css_cell:"opravit,1:zluty" }
       proc onrowclick() { 
@@ -259,10 +268,11 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
           b_cell.lst.browse_select(conc('id_lidi=',idl.get));
           b_cell.lst.browse_refresh;
         ];
-        [ // MAIL
+        [ // PACK
           eq(b_pack.get,b_left.get,b_right.get); 
-          r_ma.Load;
+          r_go.Load;
           eq(b_pack.get,b_right.get); 
+          f_pack.Init;
           b_pack.lst.browse_select(conc('id_lidi=',idl.get));
           b_pack.lst.browse_refresh;
         ]
@@ -456,7 +466,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     button  [-67,-10,,] { tag:'e', title:"[fa-heart] nový",proc onclick() { do_novy(form,b_fara.lst) }}
     button  [-15,-10,,] { tag:'e', title:"[fa-times fa-red] zruš",proc onclick() { do_zrus(form,b_fara.lst)}}
   }
-  // ------------------------------------------------------------- MAIL
+  // ------------------------------------------------------------- PACK (mail)
   form _b_pack [,,1,1] { css:'work'
     check vyber [-6,0,115,] { title:"jen vybrané", format:"t", css:'relace' proc onchange() { 
       { this.get; lst.selected('use') | lst.selected('ignore') }; lst.browse_seek 
@@ -466,10 +476,12 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
       show idp { data:pack.id_pack }
       show idg { data:g.id_go }
       show idl { data:g.id_lidi }
-      show pack_subj [,,85,] { title:'název', data:pack.pack_subj, format:'tsq*' }
+      show wgo { expr:"g.stav" }
+      show pack_subj [,,85,] { title:'název', data:pack.pack_subj, format:'tsq*' 
+          css_cell:"wgo,4:zeleny,5:cerveny,6:zluty" }
       show pack_date [,,65,] { title:'začátek', data:pack.pack_date, format:'rs-q*' }
       proc onrowclick() { 
-        f_pack.load(idp.get);
+        f_pack.Load(idp.get);
         r_go.Load;
         [ eq(b_lidi.get,b_right.get); 
           b_lidi.lst.browse_select(conc('id_pack=',idp.get));
@@ -482,10 +494,40 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     }
   }
   form _f_pack [,,1,1] { css:'work', style:'overflow:auto'
+    proc Init() {
+      form.init; 
+      html_text.set('');
+    }
+    proc Load(k) {
+      form.load(k); 
+      html_text.set(pack_text.get);
+    }
+//    proc drop_init() {                                    // inicializace - je třeba na začátku
+//      drop.init('','S:');                                 // naplnit pole drag&drop a definovat dir
+//      drop.set(attach.get);
+//    }
     field [-10,0,50,] { data:pack.id_pack, format:'ro' }
-    field pack_subj [10,20,177,] { title:'^název', data:pack.pack_subj }
-    field pack_date [10,55,85,] { type:'date', title:'^začátek', data:pack.pack_date }
-    button [10,-10,,] { title:"[fa-upload] text", proc onclick() { 
+    field pack_subj [10,20,240,] { title:'^předmět mailu' data:pack.pack_subj }
+    field pack_date [263,20,90,] { type:'date', title:'^datum odeslání' data:pack.pack_date format:'r'}
+    field pack_text { data:pack.pack_text }
+    // ==> připojení příloh
+    field attach {data:pack.pack_encl}                     // datové pole se seznamem příloh
+    label [13,43,411,] {title:'myší sem lze přetáhnout přílohy, zrušit a stáhnout pak kontextovým menu' }
+    label drop [10,60,340,37] { type:'drop'
+//      proc onload(f) {                                    // po dokončení přenosu
+//        ask('mail2_mai_attach',form.key,f);                 // přidání souboru k dávce
+//      }
+//      proc onmenu(op,name,ref) {  // op=remove|remove-all
+//        { eq(op,'remove');     ask('mail2_mai_detach',form.key,name) // odebrání přílohy
+//        | eq(op,'remove-all'); ask('mail2_mai_detach_all',form.key)  // odebrání všech příloh
+//        | warning('zatím neimplementovaná operace')
+//        };
+//        attach.set(ask('select','prilohy','dopis',conc("id_dopis=",form.key)));
+//        drop_init
+//      }
+    }
+    label html_text [13,95,340,87] 
+    button [10,-10,,] { title:"[fa-edit] upravit text", proc onclick() { 
       EDITOR.Pack(form.key) }}
     // procedury
     proc onchanged() { on_chng(form); }
@@ -495,6 +537,43 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     button [-125,-10,,] { tag:'s', title:"[fa-undo] zpět", proc onclick() { do_zpet(form,b_pack.lst) }}
     button  [-67,-10,,] { tag:'e', title:"[fa-heart] nový",proc onclick() { do_novy(form,b_pack.lst) }}
     button  [-15,-10,,] { tag:'e', title:"[fa-times fa-red] zruš",proc onclick() { do_zrus(form,b_pack.lst)}}
+  }
+  // --------------------------------- přidávání adresátů
+  panel ADRESATI [0,0,400,270] { title:' Přidat adresáty mailu', type:'popup'
+    use g: form _g [0,0,,]
+    proc Pridej() {
+      g.akce.browse_load;
+      g.maily.browse_load;
+      g.display(2,'a');
+      g.koho.key(1);
+      [ panel.modal(sum(8,L2.get),sum(67,T2.get)) ]
+    }
+    form _g [,,400,270] {
+      proc onstart() {
+        koho.selects("z účastníků minulé akce:1,z adresátů jiných mailů:2");
+      }
+      select koho [0,12,300,] { title:'^výběr adresátů' format:'t'
+        proc onchanged() {
+          switch(this.key,
+            1,{ form.display(2,'a'); },
+            2,{ form.display(2,'m'); }
+          );
+      }}
+      browse akce [0,40,,] { tag:'a' rows:10, qry_rows:1
+        show ida { data:akce.id_akce }
+        show nazev [,,200,] { title:'název', data:akce.nazev, format:'tsq*' }
+        show zacatek [,,65,] { title:'začátek', data:akce.zacatek, format:'rs-q*' }
+        proc onrowclick() { 
+        }
+      }
+      browse maily [0,40,,] { tag:'m' rows:10 qry_rows:1
+        show idp { data:pack.id_pack }
+        show pack_subj [,,200,] { title:'název', data:pack.pack_subj, format:'tsq*' }
+        show pack_date [,,65,] { title:'začátek', data:pack.pack_date, format:'rs-q*' }
+        proc onrowclick() { 
+        }
+      }
+    }
   }
   // ------------------------------------------------------------- BUŇKA
   form _b_cell [,,1,1] { css:'work'
@@ -721,7 +800,5 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     }}
   }
 }
-// rozesílání mailů
-panel mai { type:'plain', title:'[fa-envelope] Maily', _sys:'*', include:'onload' } 
 // CMS sdruženého webu
 panel web { type:'plain', title:'[fa-laptop] Web', _sys:'*', include:'onload' } 

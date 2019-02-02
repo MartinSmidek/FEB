@@ -1,7 +1,7 @@
 <?php
 
   // volba verze jádra Ezer
-  $kernel= "ezer".(isset($_GET['ezer'])?$_GET['ezer']:'3'); 
+  $kernel= "ezer".(isset($_GET['ezer'])?$_GET['ezer']:'3.1'); 
 
   // rozlišení lokální a ostré verze
   $ezer_local= preg_match('/^\w+\.bean$/',$_SERVER["SERVER_NAME"])?1:0;
