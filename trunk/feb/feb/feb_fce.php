@@ -1,4 +1,25 @@
 <?php # (c) 2017 Martin Smidek <martin@smidek.eu>
+/** =========================================================================================> MAILY */
+# ----------------------------------------------------------------------------- feb pack_pridat_lidi
+# přidat adresáty z jiné tabulky
+function feb_pack_pridat_lidi($idp,$rel,$tab,$id_tab) {
+  $adds= 0;
+  $rl= mysql_qry("SELECT id_lidi FROM $rel WHERE id_$tab=$id_tab");
+  while ( $rl && list($idl)= mysql_fetch_row($rl) ) {
+    $idg= select('id_lidi','go',"id_pack=$idp AND id_lidi=$idl");
+    if ( !$idg ) {
+      query("INSERT INTO go (id_pack,id_lidi,stav) VALUE ($idp,$idl,0)");
+      $adds+= mysql_affected_rows();
+    }
+  }
+  return $adds;
+}
+# ------------------------------------------------------------------------------ feb pack_ubrat_lidi
+# ubrat adresáty z jiné tabulky
+# -- ubrat lze jen neposlané maily
+function feb_pack_ubrat_lidi($idp,$rel,$tab,$id_tab) {
+  
+}
 # =====================================================================================> . XLS tisky
 # -------------------------------------------------------------------------------------- feb sestava
 # generování sestavy, kde par:
