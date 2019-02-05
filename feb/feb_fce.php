@@ -29,6 +29,127 @@ function feb_pack_ubrat_lidi($idp,$rel,$tab,$id_tab) {
   }
   return $difs;
 }
+# ------------------------------------------------------------------------------------ feb pack_send
+# ASK
+# odešli dávku $kolik mailů ($kolik=0 znamená testovací poslání)
+# $from,$fromname = From,ReplyTo
+# $test = 1 mail na tuto adresu (pokud je $kolik=0)
+# pokud je definováno $id_mail s definovaným text MAIL.body, použije se - jinak DOPIS.obsah
+# pokud je definováno $foot tj. patička, připojí se na konec
+# použije se SMTP server podle SESSION
+# stavy: ok=5, chyba=6, znovu=4
+function feb_pack_send($idp,$kolik,$from,$fromname,$test='',$idl=0,$foot='') {
+  // připojení případné přílohy
+  $attach= function($mail,$fname) {
+    global $ezer_root;
+    if ( $fname ) {
+      foreach ( explode(',',$fname) as $fnamesb ) {
+        list($fname)= explode(':',$fnamesb);
+        $fpath= "docs/$ezer_root/".trim($fname);
+        $mail->AddAttachment($fpath);
+  } } };
+  //
+  $y= (object)array('_error'=>0);
+  $stav_ok=5; $stav_chyba=6; $stav_znovu=4;
+  $pro= '';
+  // přečtení dopisu
+  list($encl,$subj,$text)= select('pack_encl,pack_subj,pack_text','pack',"id_pack=$idp");
+  // napojení na mailer
+  $mail= feb_new_PHPMailer();
+  if ( !$mail ) { 
+    $y->_html.= "<br><b style='color:#700'>odesílací adresa nelze použít (SMTP)</b>";
+    $y->_error= 1;
+    goto end;
+  }
+  $mail->From= $from;
+  $mail->AddReplyTo($from);
+  $mail->FromName= $fromname;
+  $mail->Subject= $subj;
+  $mail->Body= $text . $foot;
+  // připoj přílohy
+  $attach($mail,$encl);
+  if ( $kolik==0 ) {
+    // testovací poslání sobě
+    $mail->AddAddress($test);   // pošli si
+    // pošli
+//    $ok= $mail->Send();
+    $ok= 1; display("mail.Send()");
+    if ( $ok  )
+      $y->html.= "<br><b style='color:#070'>Byl odeslán mail na $test $pro - je zapotřebí zkontrolovat obsah</b>";
+    else {
+      $err= $mail->ErrorInfo;
+      $y->html.= "<br><b style='color:#700'>Při odesílání mailu došlo k chybě: $err</b>";
+      $y->_error++;
+    }
+  }
+  else {
+    // poslání dávky $kolik mailů
+    $n= $nko= 0;
+    $gs= pdo_qry("SELECT id_go,id_lidi,mail FROM go JOIN lidi USING (id_lidi)
+      WHERE id_pack=$idp AND mail!='' AND stav IN (0,$stav_znovu)");
+    while ( $gs && (list($idg,$idl,$adresy)= pdo_fetch_row($gs)) ) {
+      // posílej mail za mailem
+      if ( $n>=$kolik ) break;
+      $n++;
+      $i= 0;
+      $mail->ClearAddresses();
+      $mail->ClearCCs();
+      foreach(preg_split("/,\s*|;\s*|\s+/",trim($adresy," ,;"),-1,PREG_SPLIT_NO_EMPTY) as $adresa) {
+        if ( !$i++ )
+          $mail->AddAddress($adresa);   // pošli na 1. adresu
+        else                            // na další jako kopie
+          $mail->AddCC($adresa);
+      }
+      // zkus poslat mail
+//      try { $ok= $mail->Send(); } catch(Exception $e) { $ok= false; $msg= $e; }
+      $ok= 1; display("mail.Send()");
+      if ( !$ok  ) {
+        $err= $mail->ErrorInfo;
+        $y->html.= "<br><b style='color:#700'>Při odesílání mailu pro $idl došlo k chybě: $err</b>";
+        $y->_error++;
+        $nko++;
+      }
+      // zapiš výsledek do tabulky
+      $stav= $ok ? $stav_ok : $stav_chyba;
+      $msg= $ok ? '' : $mail->ErrorInfo;
+      query("UPDATE go SET stav=$stav,msg=\"$msg\" WHERE id_go=$idg");
+    }
+    $y->html.= "<br><b style='color:#070'>Bylo odesláno $n emailů "
+            .  ( $nko ? "s $nko chybami " : "bez chyb" ) . "</b>";
+  }
+end:  
+  return $y;
+}
+# -------------------------------------------------------------------------------- feb new_PHPMailer
+# nastavení parametrů pro SMTP server podle user.options.smtp
+function feb_new_PHPMailer() {  
+  global $ezer_path_serv, $ezer_root;
+  // získání parametrizace SMTP
+  $idu= $_SESSION[$ezer_root]['user_id'];
+  $i_smtp= sys_user_get($idu,'opt','smtp');
+  $smtp_json= select1('hodnota','_cis',"druh='smtp_srv' AND data=$i_smtp");
+  $smtp= json_decode($smtp_json);
+  if ( json_last_error() != JSON_ERROR_NONE ) {
+    $mail= null;
+    fce_warning("chyba ve volbe SMTP serveru" . json_last_error_msg());
+    goto end;
+  }
+  // inicializace phpMailer
+  $phpmailer_path= "$ezer_path_serv/licensed/phpmailer";
+  require_once("$phpmailer_path/class.phpmailer.php");
+  require_once("$phpmailer_path/class.smtp.php");
+  $mail= new PHPMailer;
+  $mail->SetLanguage('cz',"$phpmailer_path/language/");
+  $mail->IsSMTP();
+  $mail->CharSet = "UTF-8";
+  $mail->IsHTML(true);
+  $mail->Mailer= "smtp";
+  foreach ($smtp as $part=>$value) {
+    $mail->$part= $value;
+  }
+end:  
+  return $mail;
+}
 # =====================================================================================> . XLS tisky
 # -------------------------------------------------------------------------------------- feb sestava
 # generování sestavy, kde par:

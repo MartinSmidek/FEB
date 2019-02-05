@@ -12,7 +12,8 @@
   $app_root=  'feb';
   $skin=      'ck';
   $app_js=    array("/feb/feb_fce.js","/$kernel/client/ezer_cms3.js");
-  $app_css=   array("/feb/css/feb.css","/feb/css/edit.css","/$kernel/client/ezer_cms3.css");
+  $app_css=   array("/feb/css/feb.css","/feb/css/edit.css",
+                    "/$kernel/client/ezer_cms3.css","/$kernel/client/wiki.css");
   $abs_roots= array("/home/users/gandi/ezer.cz/web/feb","C:/Ezer/beans/feb");
   $rel_roots= array("http://feb.ezer.cz","http://feb.bean:8080");
   $kontakt=   "V případě zjištění problému nebo <br/>potřeby konzultace mi prosím napište<br/>

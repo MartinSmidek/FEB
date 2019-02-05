@@ -1,3 +1,4 @@
+#pragma switch
 // ---------------------------------------------------------------------------------------------- //
 // Aplikace pro Farní evangelizační buňky - ORA prostředí                                         //
 //                                                                                                //
@@ -28,10 +29,10 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     mask_all(0);
   }
   proc onfirstfocus() {
-    cmd.relace.key(1); cmd.relace.change;
+    cmd.relace.key(cmd.oldkey.get); cmd.relace.change;
     resize(sys('screen','width'),sys('screen','height')); 
     focused.set(1);
-    [ b_lidi.lst.browse_load("!deleted") ];
+    cmd.Init;
   }
   proc set_panel(bl,fl,fm,br,fr) {
     hide_all; 
@@ -192,7 +193,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
   // </editor-fold>
   // ------------------------------------------------------------- CMD
   form _cmd [,,*,30] {
-    var oldkey= 1
+    var oldkey= 10
     proc onstart() {
       relace.selects(conc(
         "lidé => akce:1,akce => lidé:2,lidé => buňky:3,buňky => lidé:4,",
@@ -200,10 +201,24 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
         "lidé => maily:9,maily => lidé:10,duplicity:11"
       ));
     }
+    proc Init() {
+      switch(oldkey.get,
+        1,{ b_lidi.lst.browse_load("!deleted") },
+        2,{ b_akce.lst.browse_load },
+        3,{ b_lidi.lst.browse_load },
+        4,{ b_cell.lst.browse_load },
+        5,{ b_lidi.lst.browse_load },
+        6,{ b_fara.lst.browse_load },
+        7,{ b_lidi.lst.browse_load },
+        8,{ b_cell.lst.browse_load },
+        9,{ b_lidi.lst.browse_load },
+       10,{ b_pack.lst.browse_load } 
+        );
+    }
     select relace [26,12,165,] { css:'relace', format:'t'
       proc onchanged() { onchange }
       proc onchange() {
-//        [ eq(oldkey.get,9); b_lidi.lst.browse_load("!deleted") ];
+        clear;
         switch(this.key,
           1,{ set_panel(b_lidi.get,f_lidi.get,r_na.get,b_akce.get,f_akce.get); },
           2,{ set_panel(b_akce.get,f_akce.get,r_na.get,b_lidi.get,f_lidi.get); },
@@ -225,6 +240,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
         oldkey.set(this.key);
     }}
     label [200,12,,] { title:'<=>', css:'relace' proc onclick() {
+      clear;
       eq(relace.key,11);
     | eq(relace.key,1,3,5,7,9); relace.key(sum(relace.key,1)); relace.change;
     | relace.key(minus(relace.key,1)); relace.change;
@@ -259,7 +275,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
       b_lidi.lst.browse_refresh;
     }
     var x_last=0  // poslední vybraný - pro duplicity, viz onchoice
-    button adresati [6,0,,] { title:'[fa-send] přidat adresáty' 
+    button adresati [6,0,,] { title:'[fa-user-plus] upravit adresáty' 
       proc onclick() { ADRESATI.Pridej(b_pack.lst.idp.get) }}
     check vyber [-6,0,115,] { title:"jen vybraní", format:"t", css:'relace' 
       proc onchange() { 
@@ -613,8 +629,9 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
 //      }
     }
     label html_text [13,95,340,87] 
-    button [10,-10,,] { title:"[fa-edit] upravit text", proc onclick() { 
-      EDITOR.Pack(form.key) }}
+    label p_cmd [5,-5,175,30] { css:'parm' }
+    button [14,-10,,] { title:"[fa-edit] upravit text", proc onclick() { EDITOR.Pack(form.key) }}
+    button [107,-10,,] { title:"[fa-send] odeslat", proc onclick() { MAIL.Send }}
     // procedury
     proc onchanged() { on_chng(form); }
     // operace
@@ -624,68 +641,18 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     button  [-67,-10,,] { tag:'e', title:"[fa-heart] nový",proc onclick() { do_novy(form,b_pack.lst) }}
     button  [-15,-10,,] { tag:'e', title:"[fa-times fa-red] zruš",proc onclick() { do_zrus(form,b_pack.lst)}}
   }
-  // --------------------------------- přidávání adresátů
-  panel ADRESATI [0,0,410,270] { title:' Přidat adresáty mailu', type:'popup'
-    use g: form _g [0,0,,]
-    var curr_idp: number
-    proc Pridej(_idp) {
-      curr_idp.set(_idp);
-      g.akce.browse_load;
-      g.maily.browse_load;
-      g.display(2,'a');
-      g.vyber_adr.key(1); g.vyber_adr.change;
-      [ panel.modal(sum(8,L2.get),sum(67,T2.get)) ]
-    }
-    form _g [,,400,270] {
-      proc onstart() {
-        vyber_adr.selects("z účastníků minulé akce:1,z adresátů jiných mailů:2");
-      }
-      var koho:text,
-          tab:text, rel:text,
-          id_tab: number
-      select vyber_adr [0,12,300,] { title:'^výběr adresátů' format:'t'
-        proc onchange() { onchanged }
-        proc onchanged() { 
-          switch(this.key,
-            1,{ form.display(2,'a'); koho.set('účastníky'); tab.set('akce'); rel.set('na'); },
-            2,{ form.display(2,'m'); koho.set('adresáty'); tab.set('pack'); rel.set('go'); }
-          );
-          pridat.set(conc("<i class='fa fa-plus'></i> přidat ",koho.get));
-          ubrat.set(conc("<i class='fa fa-minus'></i> ubrat ",koho.get));
-      }}
-      browse akce [0,40,,] { tag:'a' rows:10 qry_rows:1 //group_by:'id_lidi'
-        show ida { data:akce.id_akce }
-        show nazev [,,150,] { title:'název', data:akce.nazev, format:'tsq*' }
-        show zacatek [,,65,] { title:'začátek', data:akce.zacatek, format:'rs-q*' }
-//        show lidi [,,50,] { title:'adres' expr:"COUNT(*)" }
-        proc onrowclick() { id_tab.set(ida.get); }
-      }
-      browse maily [0,40,,] { tag:'m' rows:10 qry_rows:1
-        show idp { data:pack.id_pack }
-        show pack_subj [,,200,] { title:'název', data:pack.pack_subj, format:'tsq*' }
-        show pack_date [,,65,] { title:'začátek', data:pack.pack_date, format:'rs-q*' }
-        proc onrowclick() { id_tab.set(idp.get); }
-      }
-      // ovládání změn
-      label [307,40,80,50] { title:'pozměnit již vybrané adresáty:' }
-      button pridat [305,76,,] { title:'přidat účastníky' 
-        proc onclick() { var y:text
-          y.set(ask('feb_pack_pridat_lidi',curr_idp.get,rel.get,tab.get,id_tab.get));
-          b_right.lst.browse_select(conc('g.id_pack=',curr_idp.get),1);
-          b_right.lst.browse_refresh;
-          alert("bylo přidáno ",y," adresátů")
-      }}
-      button ubrat [305,102,,] { title:'ubrat účastníky' 
-        proc onclick() { var y:text
-          y.set(ask('feb_pack_ubrat_lidi',curr_idp.get,rel.get,tab.get,id_tab.get));
-          b_right.lst.browse_select(conc('g.id_pack=',curr_idp.get),1);
-          b_right.lst.browse_refresh;
-          alert("bylo ubráno ",y," adresátů")
-      }}
-    }
-  }
-  // ------------------------------------------------------------- BUŇKA
+  // ------------------------------------------------------------- CELL (buńka)
   form _b_cell [,,1,1] { css:'work'
+    proc OnLeftOpen() { 
+      echo('cell left open');
+      [ // CELL - LIDI
+        eq(b_lidi.get,b_right.get); 
+        b_lidi.lst.idm.set_attrib('data',m.id_ma);
+      ];
+    }
+    proc OnRightClose() { 
+      echo('cell right close');
+    }
     check vyber [-6,0,115,] { title:"jen vybrané", format:"t", css:'relace' 
     proc onchange() { 
       { this.get; lst.selected('use') | lst.selected('ignore') }; 
@@ -923,6 +890,140 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
       ]
     | alert(y.msg)    
     }}
+  }
+  // --------------------------------- přidávání adresátů
+  panel ADRESATI [0,0,410,270] { title:' Přidat adresáty mailu', type:'popup'
+    proc Pridej(_idp) {
+      curr_idp.set(_idp);
+      g.akce.browse_load;
+      g.maily.browse_load;
+      g.display(2,'a');
+      g.vyber_adr.key(1); g.vyber_adr.change;
+      [ panel.modal(sum(8,L2.get),sum(67,T2.get)) ]
+    }
+    use g: form _g [0,0,,]
+    var curr_idp: number
+    form _g [,,400,270] {
+      proc onstart() {
+        vyber_adr.selects("z účastníků minulé akce:1,z adresátů jiných mailů:2");
+      }
+      var koho:text,
+          tab:text, rel:text,
+          id_tab: number
+      select vyber_adr [0,12,300,] { title:'^výběr adresátů' format:'t'
+        proc onchange() { onchanged }
+        proc onchanged() { 
+          switch(this.key,
+            1,{ form.display(2,'a'); koho.set('účastníky'); tab.set('akce'); rel.set('na'); },
+            2,{ form.display(2,'m'); koho.set('adresáty'); tab.set('pack'); rel.set('go'); }
+          );
+          pridat.set(conc("<i class='fa fa-plus'></i> přidat ",koho.get));
+          ubrat.set(conc("<i class='fa fa-minus'></i> ubrat ",koho.get));
+      }}
+      view na_a: table akce { join:"USING (id_akce)" }
+      view na_l: table lidi { join:"USING (id_lidi)" }
+      browse akce [0,40,,] { tag:'a' rows:10 qry_rows:1 group_by:'id_akce'
+        show idn { data:na.id_na }
+        show idl { data:na_l.id_lidi }
+        show ida { data:na_a.id_akce }
+        show nazev [,,150,] { title:'název', data:na_a.nazev, format:'tsq*' }
+        show zacatek [,,70,] { title:'začátek', data:na_a.zacatek, format:'rs-q*' }
+        show lidi [,,45,] { title:'adres' expr:"COUNT(*)" format:'r' }
+        proc onrowclick() { id_tab.set(ida.get); }
+      }
+      view go_p: table pack { join:"USING (id_pack)" }
+      view go_l: table lidi { join:"USING (id_lidi)" }
+      browse maily [0,40,,] { tag:'m' rows:10 qry_rows:1 group_by:'id_pack'
+        show idg { data:go.id_go }
+        show idp { data:go_p.id_pack }
+        show idl { data:go_l.id_lidi }
+        show pack_subj [,,150,] { title:'název', data:go_p.pack_subj, format:'tsq*' }
+        show pack_date [,,70,] { title:'odesláno', data:go_p.pack_date, format:'rs-q*' }
+        show lidi [,,45,] { title:'adres' expr:"COUNT(*)" format:'r' }
+        proc onrowclick() { id_tab.set(idp.get); }
+      }
+      // ovládání změn
+      label [307,40,90,50] { title:'pozměnit již vybrané adresáty:' }
+      button pridat [305,76,,] { title:'přidat účastníky' 
+        proc onclick() { var y:text
+          y.set(ask('feb_pack_pridat_lidi',curr_idp.get,rel.get,tab.get,id_tab.get));
+          b_right.lst.browse_select(conc('g.id_pack=',curr_idp.get),1);
+          b_right.lst.browse_refresh;
+          alert("bylo přidáno ",y," adresátů")
+      }}
+      button ubrat [305,102,,] { title:'ubrat účastníky' 
+        proc onclick() { var y:text
+          y.set(ask('feb_pack_ubrat_lidi',curr_idp.get,rel.get,tab.get,id_tab.get));
+          b_right.lst.browse_select(conc('g.id_pack=',curr_idp.get),1);
+          b_right.lst.browse_refresh;
+          alert("bylo ubráno ",y," adresátů")
+      }}
+      button [305,-10,,] { title:'[fa-power-off] [konec' 
+        proc onclick() { panel.hide;
+      }}
+    }
+  }
+  // --------------------------------- odesílání mailů
+  panel MAIL [0,0,410,270] { title:' Odeslat mail', type:'popup'
+    proc Send() {
+      [ panel.modal(sum(8,L2.get),sum(67,T1.get)) ]
+    }
+    use g: form _g [0,0,,]
+    form _g [,,400,270] {
+      // výběr SMTP serveru
+      select smtp [105,1,202,17] { type:'map', options:map_smtp_srv.zkratka, title:'odesílat z adresy:'
+        help:'smtp|použitý odesílací server', format:'t'
+        proc onchanged() { var ok:text
+          ask('sys_user_change',sys('user','id_user'),'opt','smtp',smtp.key);
+        }
+      }
+      // odpovědi na adresu, použít patičku
+      field from [105,20,200,17] { title:'adresa pro odpovědi:'
+        help:'email z osobního nastavení', format:'t'  }
+      field name [105,39,200,17] { title:'... jméno:'
+        help:"'vyřizuje' z osobního nastavení", format:'t'  }
+      check foo [312,19,100,] { title:'patička', value:'0', format:'t', 
+        proc onchange() {
+          pata.display(this.get); this.get; pata.set(sys('user','options','email_foot'));
+        } 
+      }
+      // test
+      label [0,63,380,2] { style:'border-top:1px solid green' }
+      field zkus [105,69,200,17] { title:'poslat test na adresu:' 
+        help:'email z osobního nastavení', format:'t' }
+      button test [315,69,,] { title:'[fa-send-o] test'
+        help:'pro kontrolu - posílá se 1 mail na testovací adresu'
+        proc onclick () { var foot:text, y:object
+          msg.set(''); foot.set('');
+          confirm('Poslat zkušební mail na ',zkus.get,' ?');
+          [ foo.get; foot.set(sys('user','options','email_foot')) ]; 
+          y.set(ask('feb_pack_send',f_pack.key,0,from.get,name.get,zkus.get,r_go.key,foot.get));
+          msg.set(y._html);
+        }
+      }
+      // postupné odesílání
+      label [0,94,380,2] { style:'border-top:1px solid green' }
+      label  [0,101,364,31] { css:'parm' }
+      field davka [150,108,30,17] { title:'potom postupně odesílat po:'
+        format:'rt', value:'10'
+        proc onchange () {
+          send.set(replace_fa(conc('[fa-send-o] až ',davka.get,'  ještě neposlaných')));
+        }
+      }
+      button send [195,108,,] { title:'xx ještě neposlaných'
+        help:'pošle další dávku - počet lze měnit políčkem vlevo'
+        proc onclick () { var foot:text, y:object
+//          msg.set(''); foot.set('');
+//          confirm(conc('Opravdu poslat dalších ',davka.get,' mailů "z adresy" ',from.get,'?'));
+//          [ foo.get; foot.set(sys('user','options','email_foot')) ]; 
+//          y.set(ask('feb_pack_send',f_pack.key,davka.get,from.get,name.get,0,0,foot.get));
+//          msg.set(y.get._html);
+//          maily.browse_seek; texty.browse_seek;
+        }
+      }
+      label msg [0,135,377,67]
+      label pata [0,210,716,50] { style:"overflow:auto;border:1px solid grey;padding:5px" }
+    }
   }
 }
 // CMS sdruženého webu
