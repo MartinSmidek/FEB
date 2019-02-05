@@ -91,6 +91,10 @@ div.relace ul {
   border: none;
   color: black !important;
 }
+.relace:hover {
+  background-color: #ef7f13;
+  cursor: default;
+}
 .rel {
   background-color: #afe5e5;
   z-index: 0;
