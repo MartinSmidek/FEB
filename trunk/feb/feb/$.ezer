@@ -486,6 +486,7 @@ table _fary { key_id:'id_fary'
   text psc { help:'psč|fara - psč' }
   text obec { help:'obec|fara - obec' }
 }
-map cis_stat:   table _cis {where:"druh='stat'",   order:'poradi', key_id:'data'}
+map cis_stat:     table _cis {where:"druh='stat'"     order:'poradi' key_id:'data'}
+map map_smtp_srv: table _cis {where:"druh='smtp_srv'" order:'poradi' key_id:'data'}
 
 // </editor-fold>
