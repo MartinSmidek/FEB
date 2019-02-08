@@ -9,6 +9,10 @@
 // Ezer3                                                (c) 2018 Martin Šmídek <martin@smidek.eu> //
 // ---------------------------------------------------------------------------------------------- //
 panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
+  proc Start() {
+    set_trace('m',1,'*.set_attrib');
+    set_trace('E',1,'OnLeftOpen,OnRightClose');
+  }
   // <editor-fold defaultstate="collapsed" desc="++++++++++++++++++++++++++ ORA functions">
   const _W1=170, _W2=340, _H1=100, _H2=100 // minimální rozměry
   // odvozené hodnoty (stejné jako v resize)
@@ -29,6 +33,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     mask_all(0);
   }
   proc onfirstfocus() {
+    Start;
     cmd.relace.key(cmd.oldkey.get); cmd.relace.change;
     resize(sys('screen','width'),sys('screen','height')); 
     focused.set(1);
