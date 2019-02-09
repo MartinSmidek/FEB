@@ -395,7 +395,7 @@ table lidi { key_id:'id_lidi'
   text obec { help:'obec|bydliště - obec' }
   text adresa
   number stat { help:'stát|bydliště - stát' } // #stat
-  date web_change 
+  date web_change { sql_pipe:'sql_date1', help:'změna|datum změny z webu' }
 }
 table fara { key_id:'id_fara'
   number id_fara
@@ -427,7 +427,7 @@ table na { key_id:'id_na' // lidi/akce
   number id_lidi
   text funkce 
   text poznamka
-  date web_change 
+  date web_change { sql_pipe:'sql_date1', help:'změna|datum změny z webu' }
 }
 table je { key_id:'id_je' // lidi/fara
   number id_je
