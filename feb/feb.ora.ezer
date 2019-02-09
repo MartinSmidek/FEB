@@ -10,7 +10,7 @@
 // ---------------------------------------------------------------------------------------------- //
 panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
   proc Start() {
-//    set_trace('m',1,'*.set_attrib');
+    set_trace('m',1,'*.set_attrib');
 //    set_trace('E',1,'OnLeftOpen,OnRightClose');
   }
   proc onfirstfocus() {
@@ -57,12 +57,10 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     LL.set(b); 
     b.property(object('left',L1.get));
     LL.lst.selected('clear'); 
-    cmd.vyber.set(0); 
     cmd.vyber.display(0); 
     LL.display(1);
     L.set(f);
     f.property(object('left',L2.get,'top',T1.get));
-//    [ focused.get; LL.vyber.change ];
     L.display(1);  
   }
   proc set_right(b,f) {
@@ -70,7 +68,6 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     [ b; 
       b.property(object('left',sum(L3.get,5)));
       cmd.vyber.display(1); 
-//      RR.vyber.set(1); RR.vyber.change;
       RR.display(1);
     ];
       R.set(f);
@@ -174,7 +171,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     M.init; cmd_enable(M,'j','d|s|x'); }
   // pomocné
   proc point(x) {
-    echo("<b class='parm'>",x,'</b> mode=',mode.get);
+    echo(LL.get._id,'-',RR.get._id," <b class='parm'>",x,'</b> mode=',mode.get);
   }
 
   // </editor-fold>
@@ -208,9 +205,9 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
   }
   // </editor-fold>
   // ------------------------------------------------------------- CMD
-  var mode= 9
+  var mode= 1
   const lidi_akce=1, akce_lidi=2, lidi_cell=3, cell_lidi=4, lidi_fara=5, fara_lidi=6, 
-        cell_fara=7, fara_cell=8, lidi_pack=9, pack_lidi=10
+        cell_fara=7, fara_cell=8, lidi_pack=9, pack_lidi=10, lidi_lidi=11
   form _cmd [,,*,30] {
     proc onstart() {
       relace.selects(conc(
@@ -238,10 +235,10 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
 //      );
     }
     select relace [26,12,165,] { css:'relace', format:'t'
-      proc onchanged() { onchange }
-      proc onchange() {
+      proc onchanged() {
         clear;
-        switch(this.key,
+        mode.set(this.key);
+        switch(mode.get,
           lidi_akce.get,{ set_panel(b_lidi.get,f_lidi.get,r_na.get,b_akce.get,f_akce.get); },
           2,{ set_panel(b_akce.get,f_akce.get,r_na.get,b_lidi.get,f_lidi.get); },
           3,{ set_panel(b_lidi.get,f_lidi.get,r_ma.get,b_cell.get,f_cell.get); },
@@ -259,7 +256,6 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
               b_lidi.lst.browse_load(1);
               X.set(x_lidi.get); X.init; x_note.display(1); }
         );
-        mode.set(this.key);
     }}
     label [200,12,,] { title:'<=>', css:'relace' proc onclick() {
       clear;
@@ -268,32 +264,36 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     | relace.key(minus(relace.key,1)); relace.change;
     }}
     check vyber [-16,10,115,] { title:"jen vybrané", format:"t", css:'relace'  value:'1' 
-      proc onchange() { cmd.Init }}
-
+      proc onchange() { Init }}
+    button [0,0,,] { title:'!' proc onclick() { error('stop') }}
   }  
   # ============================================================== OBJEKTY
   var curr_lidi=0, curr_akce=0, curr_fara=0, curr_pack=0, curr_cell=0
   // ------------------------------------------------------------- LIDI
   form _b_lidi [,,1,1] { css:'ch work'
-    proc OnLeftOpen() { 
-      point('lidi left open');
+    proc OnLeftOpen() { var lidi_filtr:text
+      point(conc('lidi left open id_lidi=',lst.browse_key));
       adresati.display(0);
+      lidi_filtr.set(cconc(eq(mode.get,lidi_lidi.get),"1","!deleted"));
       lst.set_attrib('optimize.ignore','idn,idj,idm,idg');
+      lst.wch.set_attrib('expr',"'0'");
       [ cmd.vyber.get; RR.lst.selected('use') | RR.lst.selected('ignore') ];
-      [ lst.browse_seek(conc('l.id_lidi=',curr_lidi.get),1) | lst.browse_load("!deleted") ];
+      [ lst.browse_key; lst.browse_seek(conc('l.id_lidi=',lst.browse_key),lidi_filtr) 
+      | lst.browse_load(lidi_filtr) ];
       switch(mode.get,
         lidi_akce.get, {
-          lst.set_attrib('optimize.ignore','idj,idm,idg')
+          b_akce.lst.set_attrib('optimize.ignore','')
         },
-//        lidi_cell.get, {
-//          lst.set_attrib('optimize.ignore','idn,idj,idg')
-//        },
-//        lidi_fara.get, {
-//          lst.set_attrib('optimize.ignore','idn,idm,idg')
-//        },
+        lidi_cell.get, {
+          b_cell.lst.set_attrib('optimize.ignore','idv,idf')
+        },
+        lidi_fara.get, {
+          b_fara.lst.set_attrib('optimize.ignore','idv,idc')
+        },
         lidi_pack.get, { // začátek LIDI-go_PACK
 //          lst.set_attrib('optimize.ignore','idn,idj,idm')
-          b_pack.lst.wgo1.set_attrib('expr',"0");
+          b_pack.lst.set_attrib('optimize.ignore','');
+          b_pack.lst.wgo1.set_attrib('expr',"'0'");
           b_pack.lst.wgo2.set_attrib('expr',"g.stav");
         }
       );
@@ -318,21 +318,21 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     }
     proc OnRightClose() { 
       point('lidi right close');
-      b_lidi.lst.browse_refresh;
+      cmd.vyber.get;
+      RR.lst.selected('ignore');
     }
     var x_last=0  // poslední vybraný - pro duplicity, viz onchoice
     button adresati [6,0,,] { title:'[fa-user-plus] upravit adresáty' 
       proc onclick() { ADRESATI.Pridej(b_pack.lst.idp.get) }}
-//    check vyber [-6,0,115,] { title:"jen vybraní", format:"t", css:'relace' value:'1' }
-//      proc onchange() { 
-//        { this.get; lst.selected('use') | lst.selected('ignore') }; 
-//        lst.browse_seek(1,"!deleted",0,0,1) 
-//    }}
     view l: table lidi
-    view n: table na { join_type:'LEFT', join:"USING (id_lidi)" }
-    view j: table je { join_type:'LEFT', join:"USING (id_lidi)" }
-    view m: table ma { join_type:'LEFT', join:"USING (id_lidi)" }
-    view g: table go { join_type:'LEFT', join:"USING (id_lidi)" }
+    view n: table na { join_type:'LEFT', join:" * id_lidi " }
+    view j: table je { join_type:'LEFT', join:" * id_lidi " }
+    view m: table ma { join_type:'LEFT', join:" * id_lidi " }
+    view g: table go { join_type:'LEFT', join:" * id_lidi " }
+//    view n: table na { join_type:'LEFT', join:"USING (id_lidi)" }
+//    view j: table je { join_type:'LEFT', join:"USING (id_lidi)" }
+//    view m: table ma { join_type:'LEFT', join:"USING (id_lidi)" }
+//    view g: table go { join_type:'LEFT', join:"USING (id_lidi)" }
     browse lst [5,20,,] { rows:_R qry_rows:1 optimize:°{ignore:''} group_by:"l.id_lidi"
         css_rows:"deleted,1:skrt"
       show idl { data:l.id_lidi }
@@ -350,16 +350,43 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
       show obec [,,65,] { title:'obec', data:l.obec, format:'sq*' 
           css_cell:"opravit,1:zluty" }
       proc onrowclick() { 
+        point(conc('lidi rowclick id_lidi=',lst.browse_key));
         f_lidi.Load(idl.get);
+        M.Init;
         switch(mode.get,
           lidi_akce.get, /* na */ { 
-            RR.n.set_attrib('join',conc("ON n.id_akce=a.id_akce AND n.id_lidi=",idl.get)) },
+            RR.n.set_attrib('join',conc("ON n.id_akce=a.id_akce AND n.id_lidi=",idl.get));
+            [ RR.lst.browse_select(conc('id_lidi=',idl.get),1) ];
+            RR.lst.browse_refresh;
+          },
+          akce_lidi.get, /* na */ { 
+            r_na.Load;
+          },
+          lidi_cell.get, /* ma */ { 
+            RR.m.set_attrib('join',conc("ON m.id_cell=c.id_cell AND m.id_lidi=",idl.get)); 
+            [ RR.lst.browse_select(conc('id_lidi=',idl.get),1) ];
+            RR.lst.browse_refresh;
+          },
+          cell_lidi.get, /* ma */ { 
+            r_ma.Load;
+          },
+          lidi_fara.get, /* je */ { 
+            RR.j.set_attrib('join',conc("ON j.id_fara=f.id_fara AND j.id_lidi=",idl.get)); 
+            [ RR.lst.browse_select(conc('id_lidi=',idl.get),1) ];
+            RR.lst.browse_refresh;
+          },
+          fara_lidi.get, /* je */ { 
+            r_je.Load;
+          },
           lidi_pack.get, /* go */ { 
-            RR.g.set_attrib('join',conc("ON g.id_pack=p.id_pack AND g.id_lidi=",idl.get)) },
+            RR.g.set_attrib('join',conc("ON g.id_pack=p.id_pack AND g.id_lidi=",idl.get));
+            [ RR.lst.browse_select(conc('id_lidi=',idl.get),1) ];
+            RR.lst.browse_refresh;
+          },
+          pack_lidi.get, /* go */ { 
+            r_go.Load;
+          }
         );
-        M.Init;
-        [ RR.lst.browse_select(conc('id_lidi=',idl.get),1)];
-        RR.lst.browse_refresh;
 //        [ // AKCE 
 //          eq(b_akce.get,LL.get,RR.get); 
 //          r_na.Load;
@@ -476,13 +503,20 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     view a: table akce
     view n: table na { join_type:'LEFT', join:"id_lidi ... id_akce" }
     proc OnLeftOpen() { // začátek AKCE-na-LIDI
+      point(conc('akce left open id_akce=',lst.browse_key));
+      lst.set_attrib('optimize.ignore','idn,idl');
+      b_lidi.lst.set_attrib('optimize.ignore','idn,idj,idm,idg');
+      b_lidi.lst.wch.set_attrib('expr',"MAX(IF(l.web_change,1,0)+IF(IFNULL(n.web_change,0),2,0))");
+      [ cmd.vyber.get; RR.lst.selected('use') | RR.lst.selected('ignore') ];
+      [ lst.browse_key; lst.browse_seek(conc('a.id_akce=',lst.browse_key),1) 
+      | lst.browse_load(1) ];
     }
     proc OnRightClose() { // konec LIDI-na-AKCE
+      point('akce right close');
+      cmd.vyber.get;
+      RR.lst.selected('ignore');
     }
-//    check vyber [-6,0,115,] { title:"jen vybrané", format:"t", css:'relace' value:'1' 
-//      proc onchange() { cmd.Init }}
-//    view n: table na { join_type:'LEFT', join:"USING(id_akce)" }
-    browse lst [5,20,,] { rows:_R, qry_rows:1, group_by:"a.id_akce"
+    browse lst [5,20,,] { rows:_R, qry_rows:1 optimize:°{ignore:''} group_by:"a.id_akce"
       show ida { data:a.id_akce }
       show idn { data:n.id_na }
       show idl { data:n.id_lidi }
@@ -491,12 +525,18 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
           css_cell:"web,1:zluty,2:zeleny" }
       show zacatek [,,65,] { title:'začátek', data:a.zacatek, format:'rs-q*' }
       proc onrowclick() { 
-        f_akce.load(ida.get);
-        r_na.Load;
-        [ eq(b_lidi.get,RR.get); 
-          b_lidi.lst.browse_select(conc('id_akce=',ida.get),1);
-          b_lidi.lst.browse_refresh;
-        ]
+        point(conc('akce rowclick id_akce=',lst.browse_key));
+        f_akce.Load(ida.get);
+        switch(mode.get,
+          lidi_akce.get, /* > na > */ { 
+            r_na.Load;
+          },
+          akce_lidi.get, /* < na < */ { 
+            b_lidi.n.set_attrib('join',conc("ON l.id_lidi=n.id_lidi AND n.id_akce=",ida.get)); 
+            b_lidi.lst.browse_select(conc('n.id_akce=',ida.get),1);
+            b_lidi.lst.browse_refresh;
+          }
+        );
       }
       menu { type:'context'
         item { title:'přehled a export účastníků',
@@ -516,6 +556,9 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     }
   }
   form _f_akce [,,1,1] { css:'work', style:'overflow:auto'
+    proc Load(k) {
+      form.load(k);
+    }
     field [-10,0,50,] { data:akce.id_akce, format:'ro' }
     field nazev [10,20,177,] { title:'^název', data:akce.nazev }
     field zacatek [10,55,85,] { type:'date', title:'^začátek', data:akce.zacatek, format:'r' }
@@ -538,42 +581,61 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
   }
   // ------------------------------------------------------------- FARA
   form _b_fara [,,1,1] { css:'work'
-    proc OnLeftOpen() { // inicializace pro PACK vlevo
-      [ // LIDI
-        eq(b_lidi.get,RR.get); 
-      ];
-      [ // CELL
-        eq(b_cell.get,RR.get); 
-      ];
+    proc OnLeftOpen() { 
+      point(conc('fara left open id_fara=',lst.browse_key));
+      lst.set_attrib('optimize.ignore','idj,idl,idv,idc');
+      [ cmd.vyber.get; RR.lst.selected('use') | RR.lst.selected('ignore') ];
+      [ lst.browse_key; lst.browse_seek(conc('f.id_fara=',lst.browse_key),1) 
+      | lst.browse_load(1) ];
+      switch(mode.get,
+        fara_lidi.get, /* je */ {
+          b_lidi.lst.set_attrib('optimize.ignore','idn,idm,idg');
+          b_lidi.lst.wch.set_attrib('expr',"'0'");
+        }
+      );
     }
-    proc OnRightClose() { }
-//    check vyber [-6,0,115,] { title:"jen vybrané", format:"t", css:'relace'  value:'1' 
-//      proc onchange() { cmd.Init }}
-    view j: table je { join_type:'LEFT', join:"USING(id_fara)" }
-    view v: table ve { join_type:'LEFT', join:"USING(id_fara)" }
-    browse lst [5,20,,] { rows:_R, qry_rows:1, group_by:"id_fara"
-      show idf { data:fara.id_fara }
+    proc OnRightClose() { 
+      point('fara right close');
+      cmd.vyber.get;
+      RR.lst.selected('ignore');
+    }
+    view f: table fara
+    view j: table je { join_type:'LEFT', join:"... id_fara ..." }
+    view v: table ve { join_type:'LEFT', join:"... id_fara ..." }
+    browse lst [5,20,,] { rows:_R, qry_rows:1 optimize:°{ignore:''} group_by:"f.id_fara"
+      show idf { data:f.id_fara }
       show idj { data:j.id_je }
       show idl { data:j.id_lidi }
       show idv { data:v.id_ve }
       show idc { data:v.id_cell }
-      show nazev [,,85,] { title:'název', data:fara.nazev, format:'ts+q*' }
-      show obec [,,65,] { title:'obec', data:fara.obec, format:'tsq*' }
+      show nazev [,,85,] { title:'název', data:f.nazev, format:'ts+q*' }
+      show obec [,,65,] { title:'obec', data:f.obec, format:'tsq*' }
       proc onrowclick() { 
+        point(conc('fara rowclick id_fara=',lst.browse_key));
         f_fara.load(idf.get);
-        [ // LIDI
-          eq(b_lidi.get,LL.get,RR.get); 
-          r_je.Load;
-          b_lidi.lst.browse_select(conc('id_fara=',idf.get),1);
-          b_lidi.lst.browse_refresh;
-        ];
-        [ // CELL
-          eq(b_cell.get,LL.get,RR.get); 
-          r_ve.Load;
-          eq(b_cell.get,RR.get); 
-          b_cell.lst.browse_select(conc('id_cell=',idc.get),1);
-          b_cell.lst.browse_refresh;
-        ]
+        switch(mode.get,
+          lidi_fara.get, /* je */ {
+            r_je.Load;
+          },
+          fara_lidi.get, /* je */ {
+            b_lidi.j.set_attrib('join',conc("ON l.id_lidi=j.id_lidi AND j.id_fara=",idf.get)); 
+            b_lidi.lst.browse_select(conc('j.id_fara=',idf.get),1);
+            b_lidi.lst.browse_refresh;
+          }
+        );
+//        [ // LIDI
+//          eq(b_lidi.get,LL.get,RR.get); 
+//          r_je.Load;
+//          b_lidi.lst.browse_select(conc('id_fara=',idf.get),1);
+//          b_lidi.lst.browse_refresh;
+//        ];
+//        [ // CELL
+//          eq(b_cell.get,LL.get,RR.get); 
+//          r_ve.Load;
+//          eq(b_cell.get,RR.get); 
+//          b_cell.lst.browse_select(conc('id_cell=',idc.get),1);
+//          b_cell.lst.browse_refresh;
+//        ]
       }
     }
     proc set_width(w){
@@ -604,37 +666,59 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     view p: table pack
     view g: table go { join_type:'LEFT', join:"id_lidi ... id_pack" }
     proc OnLeftOpen() { 
-      echo('pack left open');
-      // PACK - LIDI
-      b_lidi.adresati.display(1);
+      point(conc('pack left open id_pack=',lst.browse_key));
       lst.set_attrib('optimize.ignore','idg,idl');
       lst.wgo1.set_attrib('expr',"MIN(g.stav)");
       lst.wgo2.set_attrib('expr',"MAX(g.stav)");
-      b_lidi.lst.wch.set_attrib('expr',"g.stav")
+      g.set_attrib('join',"ON g.id_pack=p.id_pack");
+      b_lidi.lst.set_attrib('optimize.ignore','idn,idj,idm,idg');
+      b_lidi.lst.wch.set_attrib('expr',"g.stav");
+      [ cmd.vyber.get; RR.lst.selected('use') | RR.lst.selected('ignore') ];
+      [ lst.browse_key; lst.browse_seek(conc('p.id_pack=',lst.browse_key),1) 
+      | lst.browse_load(1) ];
+
+//      echo('pack left open');
+//      // PACK - LIDI
+//      b_lidi.adresati.display(1);
+//      lst.set_attrib('optimize.ignore','idg,idl');
+//      lst.wgo1.set_attrib('expr',"MIN(g.stav)");
+//      lst.wgo2.set_attrib('expr',"MAX(g.stav)");
+//      b_lidi.lst.wch.set_attrib('expr',"g.stav")
     }
     proc OnRightClose() { 
-      echo('pack right close');
+      point('pack right close');
+      cmd.vyber.get;
+      RR.lst.selected('ignore');
     }
-//    check vyber [-6,0,115,] { title:"jen vybrané", format:"t", css:'relace'  value:'1' 
-//      proc onchange() { cmd.Init }}
-    browse lst [5,20,,] { rows:_R, qry_rows:1, group_by:"p.id_pack"
-        css_rows:"wgo1,4:zluty,5:zeleny,6:cerveny" 
+    browse lst [5,20,,] { rows:_R, qry_rows:1 optimize:°{ignore:''} group_by:"p.id_pack"
       show idp { data:p.id_pack }
       show idg { data:g.id_go }
       show idl { data:g.id_lidi }
       show wgo1 { expr:"0" }
       show wgo2 { expr:"g.stav" }
       show pack_subj [,,85,] { title:'název', data:p.pack_subj, format:'tsq*' 
+          css_cell:"wgo1,4:zluty,5:zeleny,6:cerveny" }
+      show pack_date [,,65,] { title:'začátek', data:p.pack_date, format:'rs-q*' 
           css_cell:"wgo2,4:zluty,5:zeleny,6:cerveny" }
-      show pack_date [,,65,] { title:'začátek', data:p.pack_date, format:'rs-q*' }
       proc onrowclick() { 
+        point(conc('pack rowclick id_pack=',lst.browse_key));
         f_pack.Load(idp.get);
-        [ eq(b_pack.get,RR.get); r_go.Load; ];
-        [ eq(b_lidi.get,RR.get); 
-          b_lidi.g.set_attrib('join',conc("ON l.id_lidi=g.id_lidi AND g.id_pack=",idp.get));
-          b_lidi.lst.browse_select(conc('g.id_pack=',idp.get),1);
-          b_lidi.lst.browse_refresh;
-        ]
+        switch(mode.get,
+          lidi_pack.get, /* > go > */ { 
+            r_go.Load;
+          },
+          pack_lidi.get, /* < go < */ { 
+            b_lidi.g.set_attrib('join',conc("ON l.id_lidi=g.id_lidi AND g.id_pack=",idp.get));
+            b_lidi.lst.browse_select(conc('g.id_pack=',idp.get),1);
+            b_lidi.lst.browse_refresh;
+          }
+        );
+//        [ eq(b_lidi.get,RR.get); 
+//          b_lidi.g.set_attrib('join',conc("ON l.id_lidi=g.id_lidi AND g.id_pack=",idp.get));
+//          b_lidi.lst.browse_select(conc('g.id_pack=',idp.get),1);
+//          b_lidi.lst.browse_refresh;
+//        ];
+//        [ eq(b_pack.get,RR.get); r_go.Load; ];
       }
     }
     proc set_width(w){
@@ -691,44 +775,49 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
   // ------------------------------------------------------------- CELL (buńka)
   form _b_cell [,,1,1] { css:'work'
     proc OnLeftOpen() { 
-      echo('cell left open');
-      [ // CELL - LIDI
-        eq(b_lidi.get,RR.get); 
-        b_lidi.lst.idm.set_attrib('data',m.id_ma);
-      ];
+      point(conc('cell left open id_cell=',lst.browse_key));
+      lst.set_attrib('optimize.ignore','idv,idf');
+      [ cmd.vyber.get; RR.lst.selected('use') | RR.lst.selected('ignore') ];
+      [ lst.browse_key; lst.browse_seek(conc('c.id_cell=',lst.browse_key),1) 
+      | lst.browse_load(1) ];
+      switch(mode.get,
+        cell_lidi.get, /* ma */ {
+          b_lidi.lst.set_attrib('optimize.ignore','idn,idj,idg');
+          b_lidi.lst.wch.set_attrib('expr',"'0'");
+        }
+      );
     }
     proc OnRightClose() { 
-      echo('cell right close');
+      point('cell right close');
+      cmd.vyber.get;
+      RR.lst.selected('ignore');
     }
-//    check vyber [-6,0,115,] { title:"jen vybrané", format:"t", css:'relace'  value:'1' 
-//      proc onchange() { cmd.Init }}
+    view c: table cell
     view m: table ma { join_type:'LEFT', join:"USING(id_cell)" }
     view v: table ve { join_type:'LEFT', join:"USING(id_cell)" }
-    browse lst [5,20,,] { rows:_R, qry_rows:1, group_by:"id_cell"
-      show idc { data:cell.id_cell }
+    browse lst [5,20,,] { rows:_R, qry_rows:1 optimize:°{ignore:''} group_by:"c.id_cell"
+      show idc { data:c.id_cell }
       show idm { data:m.id_ma }
       show idl { data:m.id_lidi }
       show idv { data:v.id_ve }
       show idf { data:v.id_fara }
-      show web { data:cell.web_stav }
-      show nazev [,,85,] { title:'název', data:cell.nazev, format:'ts+q*' 
+      show web { data:c.web_stav }
+      show nazev [,,85,] { title:'název', data:c.nazev, format:'ts+q*' 
           css_cell:"web,1:zluty,2:zeleny" }
-      show stav [,,65,] { title:'stav', data:cell.stav, format:'tsq*' }
+      show stav [,,65,] { title:'stav', data:c.stav, format:'tsq*' }
       proc onrowclick() { 
+        point(conc('cell rowclick id_cell=',lst.browse_key));
         f_cell.load(idc.get);
-        [ // LIDI
-          eq(b_lidi.get,RR.get); 
-          r_ma.Load;
-          b_lidi.lst.browse_select(conc('id_cell=',idc.get),1);
-          b_lidi.lst.browse_refresh;
-        ];
-        [ // FARA
-          eq(b_fara.get,LL.get,RR.get); 
-          r_ve.Load;
-          eq(b_fara.get,RR.get); 
-          b_fara.lst.browse_select(conc('id_fara=',idf.get),1);
-          b_fara.lst.browse_refresh;
-        ];
+        switch(mode.get,
+          lidi_cell.get, /* ma */ {
+            r_ma.Load;
+          },
+          cell_lidi.get, /* ma */ {
+            b_lidi.m.set_attrib('join',conc("ON l.id_lidi=m.id_lidi AND m.id_cell=",idc.get)); 
+            b_lidi.lst.browse_select(conc('m.id_cell=',idc.get),1);
+            b_lidi.lst.browse_refresh;
+          }
+        );
       }
     }
     proc set_width(w){
@@ -753,7 +842,9 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
   # ============================================================== RELACE
   // ------------------------------------------------------------- LIDI na AKCE
   form _r_na [,,1,1] { css:'rel', style:'overflow:auto'
-    var tab='na'
+    var tab:object
+    // globální funkce
+    proc onstart() { tab.set(na) }
     view n: table na
     field id [-10,0,50,] { data:n.id_na, help:'-', format:'ro' }
     field id1 {data:n.id_lidi }
@@ -761,6 +852,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     field web_change { data:na.web_change }
     // položky
     field funkce [10,20,100,] { tag:'x', title:'^funkce', data:n.funkce }
+    field web_change [120,20,90,] { tag:'x' type:'date' title:'^změna z webu', data:n.web_change }
     edit poznamka [10,55,448,75] { tag:'x', title:'^poznámka', data:n.poznamka }
     // procedury
     proc onchanged() { on_chng(form); }
@@ -797,7 +889,9 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
   }
   // ------------------------------------------------------------- LIDI je FARA
   form _r_je [,,1,1] { css:'rel', style:'overflow:auto'
-    var tab='je'
+    var tab:object
+    // globální funkce
+    proc onstart() { tab.set(je) }
     view j: table je
     field id [-10,0,50,] { data:j.id_je, help:'-', format:'ro' }
     field id1 {data:j.id_lidi }
@@ -851,7 +945,9 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
   }
   // ------------------------------------------------------------- LIDI ma CELL
   form _r_ma [,,1,1] { css:'rel', style:'overflow:auto'
-    var tab='ma'
+    var tab:object
+    // globální funkce
+    proc onstart() { tab.set(ma) }
     view m: table ma
     field id [-10,0,50,] { data:m.id_ma, help:'-', format:'ro' }
     field id1 {data:m.id_lidi }
@@ -877,7 +973,9 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
   }
   // ------------------------------------------------------------- CELL ve FARA
   form _r_ve [,,1,1] { css:'rel', style:'overflow:auto'
-    var tab='ve'
+    var tab:object
+    // globální funkce
+    proc onstart() { tab.set(ve) }
     view v: table ve
     field id [-10,0,50,] { data:v.id_ve, help:'-', format:'ro' }
     field id1 {data:cell.id_cell }
@@ -945,7 +1043,6 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
           tab:text, rel:text,
           id_tab: number
       select vyber_adr [0,12,300,] { title:'^výběr adresátů' format:'t'
-        proc onchange() { onchanged }
         proc onchanged() { 
           switch(this.key,
             1,{ form.display(2,'a'); koho.set('účastníky'); tab.set('akce'); rel.set('na'); },
