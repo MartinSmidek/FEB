@@ -72,13 +72,14 @@ function feb_pack_send($idp,$kolik,$from,$fromname,$test='',$idl=0,$foot='') {
     // testovací poslání sobě
     $mail->AddAddress($test);   // pošli si
     // pošli
-//    $ok= $mail->Send();
-    $ok= 1; display("mail.Send()");
+    $ok= $mail->Send();
+//    $ok= 1; display("mail.Send()");
     if ( $ok  )
-      $y->html.= "<br><b style='color:#070'>Byl odeslán mail na $test $pro - je zapotřebí zkontrolovat obsah</b>";
+      $y->_html.= "<br><b style='color:#070'>Byl odeslán testovací mail na $test $pro "
+        . "- je zapotřebí zkontrolovat obsah</b>";
     else {
       $err= $mail->ErrorInfo;
-      $y->html.= "<br><b style='color:#700'>Při odesílání mailu došlo k chybě: $err</b>";
+      $y->_html.= "<br><b style='color:#700'>Při odesílání testovacího mailu došlo k chybě: $err</b>";
       $y->_error++;
     }
   }
@@ -105,7 +106,7 @@ function feb_pack_send($idp,$kolik,$from,$fromname,$test='',$idl=0,$foot='') {
       $ok= 1; display("mail.Send()");
       if ( !$ok  ) {
         $err= $mail->ErrorInfo;
-        $y->html.= "<br><b style='color:#700'>Při odesílání mailu pro $idl došlo k chybě: $err</b>";
+        $y->_html.= "<br><b style='color:#700'>Při odesílání mailu pro $idl došlo k chybě: $err</b>";
         $y->_error++;
         $nko++;
       }
@@ -114,7 +115,7 @@ function feb_pack_send($idp,$kolik,$from,$fromname,$test='',$idl=0,$foot='') {
       $msg= $ok ? '' : $mail->ErrorInfo;
       query("UPDATE go SET stav=$stav,msg=\"$msg\" WHERE id_go=$idg");
     }
-    $y->html.= "<br><b style='color:#070'>Bylo odesláno $n emailů "
+    $y->_html.= "<br><b style='color:#070'>Bylo odesláno $n emailů "
             .  ( $nko ? "s $nko chybami " : "bez chyb" ) . "</b>";
   }
 end:  
@@ -139,9 +140,11 @@ function feb_new_PHPMailer() {
   require_once("$phpmailer_path/class.phpmailer.php");
   require_once("$phpmailer_path/class.smtp.php");
   $mail= new PHPMailer;
-  $mail->SetLanguage('cz',"$phpmailer_path/language/");
+  $ok= $mail->SetLanguage('cs',"$phpmailer_path/language/");
+  if ( !$ok ) fce_error("PHPMailer: chyba konfigurace jazyků");
   $mail->IsSMTP();
   $mail->CharSet = "UTF-8";
+  $mail->Encoding = 'base64';
   $mail->IsHTML(true);
   $mail->Mailer= "smtp";
   foreach ($smtp as $part=>$value) {
