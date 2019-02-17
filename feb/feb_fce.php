@@ -45,7 +45,7 @@ function feb_pack_send($idp,$kolik,$from,$fromname,$test='',$idl=0,$foot='') {
     if ( $fname ) {
       foreach ( explode(',',$fname) as $fnamesb ) {
         list($fname)= explode(':',$fnamesb);
-        $fpath= "docs/$ezer_root/".trim($fname);
+        $fpath= "docs/prilohy/".trim($fname);
         $mail->AddAttachment($fpath);
   } } };
   //
@@ -120,6 +120,36 @@ function feb_pack_send($idp,$kolik,$from,$fromname,$test='',$idl=0,$foot='') {
   }
 end:  
   return $y;
+}
+# ---------------------------------------------------------------------------------- feb pack_attach
+# přidá další přílohu k mailu (soubor je v docs/$ezer_root)
+function feb_pack_attach($idp,$f) { 
+  // nalezení záznamu v tabulce a přidání názvu souboru
+  $names= select('pack_encl','pack',"id_pack=$idp");
+  $names= ($names ? "$names," : '')."{$f->name}:{$f->size}";
+  query("UPDATE pack SET pack_encl='$names' WHERE id_pack=$idp");
+  return 1;
+}
+# ------------------------------------------------------------------------------ feb pack_detach_all
+# odstraní všechny přílohy mailu
+function feb_pack_detach_all($idp) {
+  query("UPDATE pack SET pack_encl='' WHERE id_pack=$idp");
+  return 1;
+}
+# ---------------------------------------------------------------------------------- feb pack_detach
+# odebere soubor z příloh
+function feb_pack_detach($idp,$name) {
+  // nalezení záznamu v tabulce a odebrání názvu souboru
+  $names= select('pack_encl','pack',"id_pack=$idp");
+  $as= explode(',',$names);
+  $as2= array();
+  foreach($as as $a) {
+    list($an)= explode(':',$a);
+    if ( $an!=$name )$as2[]= $a;
+  }
+  $names2= implode(',',$as2);
+  query("UPDATE pack SET pack_encl='$names2' WHERE id_pack=$idp");
+  return 1;
 }
 # -------------------------------------------------------------------------------- feb new_PHPMailer
 # nastavení parametrů pro SMTP server podle user.options.smtp

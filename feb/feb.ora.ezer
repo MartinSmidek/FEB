@@ -213,7 +213,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
   }
   // </editor-fold>
   // ------------------------------------------------------------- CMD
-  var mode= 2
+  var mode= 10
   const lidi_akce=1, akce_lidi=2, lidi_cell=3, cell_lidi=4, lidi_fara=5, fara_lidi=6, 
         cell_fara=7, fara_cell=8, lidi_pack=9, pack_lidi=10, duplicity=11
   form _cmd [,,*,30] {
@@ -425,8 +425,10 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     }
   }
   form _f_lidi [,,1,1] { css:'ch work', style:'overflow:auto'
+    // public procedury a proměnné
     proc Load(k) {
       form.load(k);
+      cmd_enable(form,'e','s'); 
       form.display(not(deleted.get),'s|e|x');
       m.berweb.enable(web_change.get);
     }
@@ -534,8 +536,9 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     }
   }
   form _f_akce [,,1,1] { css:'work', style:'overflow:auto'
+    // public procedury a proměnné
     proc Load(k) {
-      form.load(k);
+      form.load(k); cmd_enable(form,'e','s'); 
     }
     field [-10,0,50,] { data:akce.id_akce, format:'ro' }
     field nazev [10,20,177,] { title:'^název', data:akce.nazev }
@@ -592,7 +595,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
       show obec [,,65,] { title:'obec', data:f.obec, format:'tsq*' }
       proc onrowclick() { 
         point(conc('fara rowclick id_fara=',lst.browse_key));
-        f_fara.load(idf.get);
+        f_fara.Load(idf.get);
         switch(mode.get,
           lidi_fara.get, /* je */ {
             r_je.Load;
@@ -628,6 +631,10 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     }
   }
   form _f_fara [,,1,1] { css:'work', style:'overflow:auto'
+    // public procedury a proměnné
+    proc Load(k) {
+      form.load(k); cmd_enable(form,'e','s'); 
+    }
     field [-10,0,50,] { data:fara.id_fara, format:'ro' }
     field nazev [10,20,177,] { tag:'N', title:'^název', data:fara.nazev }
     field ulice [205,20,189,] { tag:'N', title:'^ulice', data:fara.ulice }
@@ -635,14 +642,16 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     field obec [254,55,141,] { tag:'N', title:'^obec', data:fara.obec }
     // procedury
     proc onchanged() { on_chng(form); }
-    // operace
-    label [-10,-5,284,30] { css:'parm' }
-    button [-240,-10,,] { tag:'s', title:"[fa-save] ulož", proc onclick() { do_uloz(form,b_fara.lst) }}
-    button [-184,-10,,] { tag:'s', title:"[fa-undo] zpět", proc onclick() { do_zpet(form,b_fara.lst) }}
-    button  [-126,-10,,] { tag:'e', title:"[fa-download] najdi",proc onclick() { 
+    // specifické operace
+    label  [5,-5,117,30] { css:'parm' }
+    button  [13,-10,,] { tag:'e', title:"[fa-download] najdi v seznamu",proc onclick() { 
       FARY.Show(form); 
       foreach(form.tagged('N'),do_change)
     }}
+    // základní operace
+    label [-10,-5,226,30] { css:'parm' }
+    button [-181,-10,,] { tag:'s', title:"[fa-save] ulož", proc onclick() { do_uloz(form,b_fara.lst) }}
+    button [-125,-10,,] { tag:'s', title:"[fa-undo] zpět", proc onclick() { do_zpet(form,b_fara.lst) }}
     button  [-67,-10,,] { tag:'e', title:"[fa-heart] nový",proc onclick() { do_novy(form,b_fara.lst) }}
     button  [-15,-10,,] { tag:'e', title:"[fa-times fa-red] zruš",proc onclick() { do_zrus(form,b_fara.lst)}}
   }
@@ -716,39 +725,38 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     }
   }
   form _f_pack [,,1,1] { css:'work', style:'overflow:auto'
+    // public procedury a proměnné
     proc Init() {
-      form.init; 
+      form.init; cmd_enable(form,'e','s'); drop.Init;
       html_text.set('');
     }
     proc Load(k) {
-//      eq(k,form.key);
-//    | 
-      form.load(k); 
+      form.load(k); cmd_enable(form,'e','s'); drop.Init;
       html_text.set(pack_text.get);
     }
-//    proc drop_init() {                                    // inicializace - je třeba na začátku
-//      drop.init('','S:');                                 // naplnit pole drag&drop a definovat dir
-//      drop.set(attach.get);
-//    }
     field [-10,0,50,] { data:pack.id_pack, format:'ro' }
     field pack_subj [10,20,240,] { title:'^předmět mailu' data:pack.pack_subj }
     field pack_date [263,20,90,] { type:'date', title:'^datum odeslání' data:pack.pack_date format:'r'}
     field pack_text { data:pack.pack_text }
     // ==> připojení příloh
-    field attach {data:pack.pack_encl}                     // datové pole se seznamem příloh
+    field attach { data:pack.pack_encl }                  // datové pole se seznamem příloh
     label [13,43,411,] {title:'myší sem lze přetáhnout přílohy, zrušit a stáhnout pak kontextovým menu' }
     label drop [10,60,340,37] { type:'drop'
-//      proc onload(f) {                                    // po dokončení přenosu
-//        ask('mail2_mai_attach',form.key,f);                 // přidání souboru k dávce
-//      }
-//      proc onmenu(op,name,ref) {  // op=remove|remove-all
-//        { eq(op,'remove');     ask('mail2_mai_detach',form.key,name) // odebrání přílohy
-//        | eq(op,'remove-all'); ask('mail2_mai_detach_all',form.key)  // odebrání všech příloh
-//        | warning('zatím neimplementovaná operace')
-//        };
-//        attach.set(ask('select','prilohy','dopis',conc("id_dopis=",form.key)));
-//        drop_init
-//      }
+      proc onload(f) {                                    // po dokončení přenosu
+        ask('feb_pack_attach',form.key,f);                // přidání souboru k dávce
+      }
+      proc onmenu(op,name,ref) {  // op=remove|remove-all
+        { eq(op,'remove');     ask('feb_pack_detach',form.key,name) // odebrání přílohy
+        | eq(op,'remove-all'); ask('feb_pack_detach_all',form.key)  // odebrání všech příloh
+        | warning('zatím neimplementovaná operace')
+        };
+        attach.set(ask('select','pack_encl','pack',conc("id_pack=",form.key)));
+        Init
+      }
+      proc Init() {                                    // inicializace - je třeba na začátku
+        drop.init('/docs/prilohy','S:');                // naplnit pole drag&drop a definovat dir
+        drop.set(attach.get);
+      }
     }
     label html_text [13,95,340,87] 
     // specifické operace
@@ -760,7 +768,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     button [107,-10,,] { title:"[fa-send] odeslat", proc onclick() { MAIL.Send }}
     // procedury
     proc onchanged() { on_chng(form); }
-    // zíkladní operace
+    // základní operace
     label  [-10,-5,226,30] { css:'parm' }
     button [-181,-10,,] { tag:'s', title:"[fa-save] ulož"  proc onclick() { do_uloz(form,b_pack.lst) }}
     button [-125,-10,,] { tag:'s', title:"[fa-undo] zpět"  proc onclick() { do_zpet(form,b_pack.lst) }}
@@ -803,7 +811,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
       show stav [,,65,] { title:'stav', data:c.stav, format:'tsq*' }
       proc onrowclick() { 
         point(conc('cell rowclick id_cell=',lst.browse_key));
-        f_cell.load(idc.get);
+        f_cell.Load(idc.get);
         switch(mode.get,
           lidi_cell.get, /* ma */ {
             r_ma.Load;
@@ -826,6 +834,13 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     }
   }
   form _f_cell [,,1,1] { css:'work', style:'overflow:auto'
+    // public procedury a proměnné
+    proc Init() {
+      form.init; cmd_enable(form,'e','s'); 
+    }
+    proc Load(k) {
+      form.load(k); cmd_enable(form,'e','s'); 
+    }
     field [-10,0,50,] { data:cell.id_cell, format:'ro' }
     field nazev [10,20,177,] { title:'^název', data:cell.nazev }
     field stav [205,20,189,] { title:'^stav', data:cell.stav }
@@ -843,8 +858,9 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
   # ============================================================== RELACE
   // ------------------------------------------------------------- LIDI na AKCE
   form _r_na [,,1,1] { css:'rel', style:'overflow:auto'
+    // public procedury a proměnné
     var tab:object
-    // globální funkce
+    // public procedury
     proc onstart() { tab.set(na) }
     view n: table na
     field id [-10,0,50,] { data:n.id_na, help:'-', format:'ro' }
@@ -891,6 +907,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
   }
   // ------------------------------------------------------------- LIDI je FARA
   form _r_je [,,1,1] { css:'rel', style:'overflow:auto'
+    // public procedury a proměnné
     var tab:object
     // globální funkce
     proc onstart() { tab.set(je) }
@@ -919,6 +936,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
   }
   // ------------------------------------------------------------- LIDI go MAIL
   form _r_go [,,1,1] { css:'rel', style:'overflow:auto'
+    // public procedury a proměnné
     var tab:object
     // globální funkce
     proc onstart() { tab.set(go) }
@@ -947,6 +965,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
   }
   // ------------------------------------------------------------- LIDI ma CELL
   form _r_ma [,,1,1] { css:'rel', style:'overflow:auto'
+    // public procedury a proměnné
     var tab:object
     // globální funkce
     proc onstart() { tab.set(ma) }
@@ -975,6 +994,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
   }
   // ------------------------------------------------------------- CELL ve FARA
   form _r_ve [,,1,1] { css:'rel', style:'overflow:auto'
+    // public procedury a proměnné
     var tab:object
     // globální funkce
     proc onstart() { tab.set(ve) }
@@ -1003,6 +1023,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
   }
   // ------------------------------------------------------------- NOTE pro dulicity
   form _xr_note [,,1,1] { css:'rel', style:'overflow:auto'
+    // public procedury a proměnné
     proc Init() { form.init }
     label [10,10,470,170] { title:"Každý člověk by v databázi měl mít jenom jeden záznam, 
     <br>pokud má dva, je třeba je <i>sloučit</i>. Dělá se to třeba takto:<br>
@@ -1099,7 +1120,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     }
   }
   // --------------------------------- odesílání mailů
-  panel MAIL [0,0,410,330] { title:' Odesílání mailu vybraným adresátům', type:'popup'
+  panel MAIL [0,0,410,400] { title:' Odesílání mailu vybraným adresátům', type:'popup'
     proc onstart() {
       g.from.set(sys('user','options','email'));
       g.zkus.set(g.from.get);
@@ -1108,6 +1129,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     }
     proc Send() {
       g.html.set(f_pack.html_text.get);
+      g.encl.set(f_pack.attach.get);
       [ panel.modal(sum(8,L2.get),sum(67,T1.get)) ]
     }
     use g: form _g [0,0,,]
@@ -1169,12 +1191,13 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
       label msg [0,150,400,50] { style:"overflow:auto;border-top:1px solid green;padding:5px" }
       label [5,146,,12] { title:'informace o odeslání' 
           style:'padding:0 3px;color:#C0E2C2;background:green'}
-      // opis mailu a patičky
+      // opis mailu, příloh, patičky
       label html [0,210,400,50] { style:"overflow:auto;border-top:1px solid green;padding:5px" }
       label [5,204,,12] { title:'odesílaný mail' style:'padding:0 3px;color:#C0E2C2;background:green'}
-      label pata [0,270,400,50] { style:"overflow:auto;border-top:1px solid green;padding:5px" }
-//      label [0,270,400,50] { title:'patička z osobního nastavení' }
-      label [5,264,,12] { title:'připojená patička' style:'padding:0 3px;color:#C0E2C2;background:green'}
+      label encl [0,270,400,50] { style:"overflow:auto;border-top:1px solid green;padding:5px" }
+      label [5,264,,12] { title:'přílohy' style:'padding:0 3px;color:#C0E2C2;background:green'}
+      label pata [0,330,400,50] { style:"overflow:auto;border-top:1px solid green;padding:5px" }
+      label [5,324,,12] { title:'připojená patička' style:'padding:0 3px;color:#C0E2C2;background:green'}
     }
   }
 }
