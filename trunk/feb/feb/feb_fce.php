@@ -157,7 +157,7 @@ function feb_new_PHPMailer() {
   global $ezer_path_serv, $ezer_root;
   // získání parametrizace SMTP
   $idu= $_SESSION[$ezer_root]['user_id'];
-  $i_smtp= sys_user_get($idu,'opt','smtp');
+  $i_smtp= sys_user_get($idu,'opt','smtp') ?: 0;
   $smtp_json= select1('hodnota','_cis',"druh='smtp_srv' AND data=$i_smtp");
   $smtp= json_decode($smtp_json);
   if ( json_last_error() != JSON_ERROR_NONE ) {

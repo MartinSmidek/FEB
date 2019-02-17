@@ -127,7 +127,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
   proc hide_all() { 
     LL.display(0); L.display(0); RR.display(0); R.display(0); M.display(0) }
   proc mask(on,f) { on;
-    function('f',"jQuery('#top_mask3').fadeIn(); jQuery(f.DOM_Block).css({zIndex:1001}); return 1;",f);
+    function('f',"jQuery('#top_mask3').fadeIn(); jQuery(f.DOM_Block).css({zIndex:2001}); return 1;",f);
   | function('f',"jQuery('#top_mask3').fadeOut(); jQuery(f.DOM_Block).css({zIndex:'initial'}); return 1;",f);  }
   proc mask_all(on) { on;
     function("jQuery('#wait_mask').fadeIn(); return 1;");
@@ -137,10 +137,14 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
   proc do_change(e) { 
     e.change }
   // operace pro objekty i relace
-  proc do_uloz(f,b) { mask(0,f); cmd_enable(f,'e','s'); 
+  proc do_uloz(f,b) { var x:text
+      mask(0,f); cmd_enable(f,'e','s'); 
       f.same 
     | f.key; f.save; { b.browse_seek; f.load | f.init } 
-    | f.insert; f.load; b.raise('onrowclick',b.browse_seek(conc(f.id_key,'=',f.key))) }
+    | f.insert; f.load; 
+      x.set(substr(f.id_key,3,1));
+      b.raise('onrowclick',b.browse_seek(conc(x,'.',f.id_key,'=',f.key))) 
+  }
   proc do_zpet(f,b) { mask(0,f); cmd_enable(f,'e','s'); 
     f.key; f.load | f.load(b.browse_key) }
   proc do_novy(f,b) { mask(1,f); cmd_enable(f,'s','e'); 
@@ -213,7 +217,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
   }
   // </editor-fold>
   // ------------------------------------------------------------- CMD
-  var mode= 10
+  var mode= 1
   const lidi_akce=1, akce_lidi=2, lidi_cell=3, cell_lidi=4, lidi_fara=5, fara_lidi=6, 
         cell_fara=7, fara_cell=8, lidi_pack=9, pack_lidi=10, duplicity=11
   form _cmd [,,*,30] {
@@ -1148,7 +1152,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
         help:"'vyřizuje' z osobního nastavení", format:'t'  }
       check foo [356,19,65,] { title:'patička', value:'0', format:'t', 
         proc onchange() {
-          pata.display(this.get); this.get; pata.set(sys('user','options','email_foot'));
+          pata.set(''); this.get; pata.set(sys('user','options','email_foot'));
         } 
       }
       // test

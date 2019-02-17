@@ -30,6 +30,7 @@ group p {
     last.set(ref);
     c.verze.set(sys('ezer','version')); 
     page.set(ask('page',ref,full_page.get,has_skill('a')));
+    [ eq(page.get('edit'),'clanek'); c.id_c.set(page.get('id')) | c.id_c.init ]; 
     w.page.set(page.get('html'));
     function("return jump_fokus();");
   }
@@ -39,6 +40,7 @@ group p {
     last.set(ref);
     c.verze.set(sys('ezer','version')); 
     page.set(ask('page',ref,full_page.get,has_skill('a')));
+    [ eq(page.get('edit'),'clanek'); c.id_c.set(page.get('id')) | c.id_c.init ]; 
     w.page.set(page.get('html'));
   }
 # ----------------------------------------------------------------------------==> control bar
@@ -54,8 +56,11 @@ group p {
       proc onclick() { 
         eq('akce',page.get('edit')); EDITOR.Akce(page.get('id')); refresh 
       | eq('bunka',page.get('edit')); EDITOR.Bunka(page.get('id')); refresh 
-      | eq('clanek',page.get('edit')); EDITOR.Clanek(page.get('id')); refresh 
+      | eq('clanek',page.get('edit')); 
+        { id_c.get; EDITOR.Clanek(id_c.get) | EDITOR.Clanek(page.get('id')) };
+        refresh 
     }}
+    field id_c [600,5,50,] { title:'ID článku' format:'r' }
     check full [150,5,100,] { title:"celá stránka"
       proc onchange() { full_page.set(this.get); cms_go(last.get) } }
     button [-95,5,,] { skill:'a|a', title:"[fa-gears] CMS" 
