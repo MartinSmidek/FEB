@@ -188,13 +188,6 @@ panel EDITOR [0,0,710,530] { title:' Úprava článku na webu', type:'popup'
       proc onclick() { form.save; panel.hide(1); }}
     button  [-75,5,,] { title:'Zpět', help:'ukončit editor bez uložení změn'
       proc onclick() { panel.hide(0); }}
-    button app [-3,4,,] { title:'[fa-files-o] Přílohy', help:'seznam souborů sdružených s textem'
-      proc onclick() {
-        UPLOAD.ckeditor.set(obsah);
-        UPLOAD.path.set(path.get);
-        UPLOAD.modal //(50,100)
-      }
-    }
     edit obsah [0,40,710,480] { type:'html', data:pack.pack_text, par:°{toolbar:'FEB'} 
       proc ondrop(f) {                   // odmítnutí přenosu při novém mailu
         echo('CKEDIT dropped=',f.name);  //  kterého neznáme cid
