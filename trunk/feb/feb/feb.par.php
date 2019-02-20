@@ -22,8 +22,22 @@
         'FORM'=>array(
           // přihláška na seminář - bez kontaktu na rodiče
           'seminar'=>array(
-            'TYPE'=>array('allow_unknown'),
+            'TYPE'=>array('allow_unknown','confirm'),
             'TEXT'=>array( 
+              'cms_confirm'  => 
+                  "<span style='font-size:8pt'>
+                    Vyplněním této přihlášky dávám výslovný souhlas s použitím uvedených osobních 
+                    údajů pro potřeby pořadatele pro organizace akcí v souladu s Nařízením 
+                    Evropského parlamentu a Rady (EU) 2016/679 ze dne 27. dubna 2016 o ochraně 
+                    fyzických osob a zákonem č. 101/2000 Sb. ČR. v platném znění. Současně 
+                    souhlasím s tím, že pořadatel je oprávněn dokumentovat její průběh – 
+                    pořizovat foto, audio, video záznamy a tyto materiály může použít pro účely 
+                    další propagace své činnosti.
+                  </span>",
+              'cms_confirm_missing_1' =>
+                  "<span class='problem'>Projevte prosím souhlas ...</span>",
+              'cms_confirm_missing_2' =>
+                  "Váš souhlas jsme vzali na vědomí",
               'cms_create_1'  => 
                   "Napište prosím svoji mailovou adresu, na kterou vám dojde 
                   mail s PINem, který umožní dokončit vyplnění přihlášky ...",
@@ -67,7 +81,9 @@
               'cms_submit_missing'  => 
                   "<span class='problem'>Vyplňte prosím správně chybějící položky.</span>",
               'cms_error'=>
-                  "Při zpracování formuláře došlo bohužel k chybě, selhalo spojení se serverem" 
+                  "Při zpracování formuláře došlo bohužel k chybě, selhalo spojení se serverem" ,
+              'cms_IE_forbiden'=>
+                  "Online přihlášení lze použít pouze z prohlížečů Chrome, Firefox, Edge" 
             ),
             'ELEM'=>array(
               'Ojmeno'    => array('t','*','jméno',190), 
@@ -88,6 +104,9 @@
               'Ochange'=>'web_change',
               'Rchange'=>'web_change',
               ''=>''
+//            ),
+//            'CALL'=>array(
+//              'confirm_O'=> "cms_confirm"       // parametry IDO,IDA
             )
           ),
           // přihlášení do CMS

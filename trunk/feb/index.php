@@ -1,25 +1,50 @@
 <?php
 
+//echo("Stranky http://www.evangelizacnibunky.cz jsou docasne mimo provoz, "
+//    . "<br>pripravujeme jejich novou verzi, "
+//    . "<br>budou v provozu behem kratke doby. "
+//    . "<br>Dekujeme za pochopeni."
+//    . "<br><br><br><br>");
+
 $cms= 'man';
 $ezer_local= $_SERVER['SERVER_NAME']=='feb.bean' ? 1 : 0;
 $index= $ezer_local ? "index.php" : "index.php";
+//if ( !$ezer_local ) {
+//  // pro ostrý server vnuť HTTPS
+//  list($http)= isset($_SERVER["HTTP_REFERER"]) 
+//      ? explode('://',$_SERVER["HTTP_REFERER"]) : array('http');
+//  if ( $http=='http' ) {
+//    $url= "https://". $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI'];
+//    header("Location: $url");
+//    exit;
+//  }  
+//}
 
 # ------------------------------------------ init
 
 $microtime_start= microtime();
 if ( !isset($_SESSION) ) session_start();
 $_SESSION['web']['index']= $index;
-if ( isset($_GET['err']) && $_GET['err'] ) error_reporting(E_ERROR); else error_reporting(0);
-ini_set('display_errors', 'On');
+// nastavení zobrazení PHP-chyb klientem při &err=1
+if ( isset($_GET['err']) && $_GET['err'] ) {
+  error_reporting(E_ALL ^ E_NOTICE);
+  ini_set('display_errors', 'On');
+}
+else 
+  error_reporting(0);
+
+const EZER_PDO_PORT=1;
+require_once("ezer3.1/mysql.inc.php");
+require_once("ezer3.1/server/ezer_pdo.php");
 require_once("feb/web_fce.php");
 require_once("feb/mini.php");
-require_once("ezer3/server/ezer_cms3.php");
+require_once("ezer3.1/server/ezer_cms3.php");
 require_once("feb/feb.par.php");
 
 # ------------------------------------------ ajax
-if ( isset($_GET['mail']) && $_GET['mail']=='me' ) {
-  $TEST= (object)array('cms'=> 1,'cmd'=>'prihlaska_mail','mail'=>"martin@smidek.eu");
-}
+//if ( isset($_GET['mail']) && $_GET['mail']=='me' ) {
+//  $TEST= (object)array('cms'=> 1,'cmd'=>'prihlaska_mail','mail'=>"martin@smidek.eu");
+//}
 if ( isset($TEST) || count($_POST) ) {
   $y= $TEST ? $TEST : array2object($_POST);
   if ( $y->cms ) {
@@ -45,7 +70,8 @@ $fe_level= isset($_SESSION['web']['fe_level']) ? $_SESSION['web']['fe_level'] : 
   # ------------------------------------------ web
   global $ezer_path_root, $GET_rok;
 
-  $href= $_SERVER['REQUEST_SCHEME'].'://'.$_SERVER['SERVER_NAME'].':'.$_SERVER['SERVER_PORT'].
+  $http= isset($_SERVER["HTTP_X_FORWARDED_PROTO"]) ? $_SERVER["HTTP_X_FORWARDED_PROTO"] : 'http';
+  $href= "$http://".$_SERVER['SERVER_NAME'].':'.$_SERVER['SERVER_PORT'].
     $_SERVER['SCRIPT_NAME'].'?page=';
   $path= isset($_GET['page']) ? explode('!',$_GET['page']) : array('home');
 //  $fe_user= isset($_SESSION['web']['fe_user']) ? $_SESSION['web']['fe_user'] : 0;

@@ -2,6 +2,29 @@
 // <editor-fold defaultstate="collapsed" desc="++++++++++++++++++++++++++ EZER functions">
 /** ==========================================================================================> EZER */
 function wu($x) { return $x; }
+# ------------------------------------------------------------------------------------- ezer browser
+# identifikace prohlížeče a operačního systému
+function ezer_browser(&$abbr,&$version,&$platform,$agent=null ) {
+  if ( !$agent ) $agent= $_SERVER['HTTP_USER_AGENT'];
+  // identifikace prohlížeče
+  if     ( preg_match('/Edge\/([\d\.])*/',   $agent,$m) ) { $abbr='EG'; $version= $m[0]; }
+  elseif ( preg_match('/Trident|MSIE\/([\d\.])*/', $agent,$m) ) { $abbr='IE'; $version= $m[0]; }
+  elseif ( preg_match('/Vivaldi\/([\d\.])*/',$agent,$m) ) { $abbr='VI'; $version= $m[0]; }
+  elseif ( preg_match('/Opera\/([\d\.])*/',  $agent,$m) ) { $abbr='OP'; $version= $m[0]; }
+  elseif ( preg_match('/Firefox\/([\d\.])*/',$agent,$m) ) { $abbr='FF'; $version= $m[0]; }
+  elseif ( preg_match('/Chrome\/([\d\.])*/', $agent,$m) ) { $abbr='CH'; $version= $m[0]; }
+  elseif ( preg_match('/Safari\/([\d\.])*/', $agent,$m) ) { $abbr='SF'; $version= $m[0]; }
+  else { $abbr='?'; $version= '?/?'; }
+  // identifikace platformy prohlížeče: Android => Ezer.client == 'A'
+  $platform =          // x11 hlásí Chrome při vzdáleném ladění (chrome://inspect/#devices)
+	preg_match('/Windows Phone|Windows Mobile/i',$agent)      ? 'P' : (
+	preg_match('/Android/i',$agent)                           ? 'A' : (
+	preg_match('/iPad|iPhone/i',$agent)                       ? 'I' : (
+	preg_match('/linux/i',$agent)                             ? 'L' : (
+	preg_match('/macintosh|Mac OS X|Power_PC|PPC/i',$agent)   ? 'M' : (
+	preg_match('/Windows|win32|Windows NT/i',$agent)          ? 'W' : '?'
+  )))));
+}
 # -------------------------------------------------------------------------------------- kolik_1_2_5
 # výběr správného tvaru slova podle množství a tabulky tvarů pro 1,2-4,5 a více
 # např. kolik_1_2_5(dosp,"dospělý,dospělí,dospělých")
@@ -211,44 +234,44 @@ function array2object(array $array) {
   }
   return $object;
 }
-# ------------------------------------------------------------------------------------- ezer_connect
-# spojení s databází
-# $db = jméno databáze uvedené v konfiguraci aplikace
-# $db = .main. pokud má být připojena první databáze z konfigurace
-# $initial=1 pokud není ještě aktivní fce_error
-function ezer_connect ($db0='.main.',$even=false,$initial=0) {
-  global $trace;
-//   $trace.= "ezer_connect ($db0)<br>";
-  global $ezer_db, $EZER;
-  $err= '';
-  $db= $db0;
-  if ( $db=='.main.' ) {
-    foreach ( $ezer_db as $db1=>$desc) {
-      $db= $db1;
-      break;
-    }
-  }
-  // vlastní připojení, pokud nebylo ustanoveno
-  $db_name= (isset($ezer_db[$db][5]) && $ezer_db[$db][5]!='') ? $ezer_db[$db][5] : $db;
-  if ( !$ezer_db[$db][0] || $even ) {
-    $ezer_db[$db][0]= @mysql_pconnect($ezer_db[$db][1],$ezer_db[$db][2],$ezer_db[$db][3]);
-    if ( !$ezer_db[$db][0] ) {
-      fce_error("db=$db|connect: server '{$ezer_db[$db][1]}' s databazi '"
-        . ($ezer_db[$db][5] ? "$db/$db_name" : $db)."' neni pristupny:").mysql_error();
-    }
-  }
-  $res= @mysql_select_db($db_name,$ezer_db[$db][0]);
-  if ( !$res ) {
-    $ok= 0;
-    $err= "databaze '$db_name' je nepristupna";
-    if ( !$initial ) fce_error("connect: $err".mysql_error());
-    else die("connect: $err".mysql_error());
-  }
-  if ( $ezer_db[$db][4] ) {
-    mysql_query("SET NAMES '{$ezer_db[$db][4]}'");
-  }
-  return $err;
-}
+//# ------------------------------------------------------------------------------------- ezer_connect
+//# spojení s databází
+//# $db = jméno databáze uvedené v konfiguraci aplikace
+//# $db = .main. pokud má být připojena první databáze z konfigurace
+//# $initial=1 pokud není ještě aktivní fce_error
+//function ezer_connect ($db0='.main.',$even=false,$initial=0) {
+//  global $trace;
+////   $trace.= "ezer_connect ($db0)<br>";
+//  global $ezer_db, $EZER;
+//  $err= '';
+//  $db= $db0;
+//  if ( $db=='.main.' ) {
+//    foreach ( $ezer_db as $db1=>$desc) {
+//      $db= $db1;
+//      break;
+//    }
+//  }
+//  // vlastní připojení, pokud nebylo ustanoveno
+//  $db_name= (isset($ezer_db[$db][5]) && $ezer_db[$db][5]!='') ? $ezer_db[$db][5] : $db;
+//  if ( !$ezer_db[$db][0] || $even ) {
+//    $ezer_db[$db][0]= @mysql_pconnect($ezer_db[$db][1],$ezer_db[$db][2],$ezer_db[$db][3]);
+//    if ( !$ezer_db[$db][0] ) {
+//      fce_error("db=$db|connect: server '{$ezer_db[$db][1]}' s databazi '"
+//        . ($ezer_db[$db][5] ? "$db/$db_name" : $db)."' neni pristupny:").mysql_error();
+//    }
+//  }
+//  $res= @mysql_select_db($db_name,$ezer_db[$db][0]);
+//  if ( !$res ) {
+//    $ok= 0;
+//    $err= "databaze '$db_name' je nepristupna";
+//    if ( !$initial ) fce_error("connect: $err".mysql_error());
+//    else die("connect: $err".mysql_error());
+//  }
+//  if ( $ezer_db[$db][4] ) {
+//    mysql_query("SET NAMES '{$ezer_db[$db][4]}'");
+//  }
+//  return $err;
+//}
 # ---------------------------------------------------------------------------------------- mysql_row
 # provedení dotazu v $y->qry="..." a vrácení mysql_fetch_assoc (případně doplnění $y->err)
 function mysql_row($qry,$err=null) {
