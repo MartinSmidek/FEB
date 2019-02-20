@@ -75,12 +75,15 @@ function eval_menu($path) {
   global $CMS, $currpage, $tm_active, $ezer_local, $index;
   global $menu, $topmenu, $mainmenu, $elem, $backref, $top;
   $index= "index.php";
-  $prefix= $ezer_local
-      ? "http://feb.bean:8080/$index?page="
-      : "http://feb.ezer.cz/$index?page=";
+//  $prefix= $ezer_local
+//      ? "http://feb.bean:8080/$index?page="
+//      : "http://feb.ezer.cz/$index?page=";
+//  $prefix= $ezer_local
+//      ? "http://feb.bean:8080/"
+//      : "http://feb.ezer.cz/";
   $prefix= $ezer_local
       ? "http://feb.bean:8080/"
-      : "http://feb.ezer.cz/";
+      : "https://evangelizacnibunky.cz/";
   // pokud má menu M submenu S tak bude prvkem vnořené pole - první ještě patří do mainmenu
   $topmenu= $mainmenu= array();
   $currpage= implode('!',$path);
@@ -304,10 +307,10 @@ __EOD;
   }
   else {
   // dokončení stránky s minimem jádra Ezer3 potřebným pro ezer_cms3.js
+  $kernel= 'ezer3.1';
   $head=  <<<__EOD
     <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
       "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-    <!-- saved from url=(0029)http://evangelizacnibunky.cz/ -->
     <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
       <base href="/" />
@@ -316,11 +319,11 @@ __EOD;
       <meta name="keywords" content="" />
       <link href="/feb/css/web.css" rel="stylesheet" type="text/css" />
       <link href="/feb/css/edit.css" rel="stylesheet" type="text/css" />
-      <link href="/ezer3/client/ezer_cms3.css" rel="stylesheet" type="text/css" />
-      <link href="/ezer3/client/licensed/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
+      <link href="/$kernel/client/ezer_cms3.css" rel="stylesheet" type="text/css" />
+      <link href="/$kernel/client/licensed/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
       <link rel="shortcut icon" href="/feb/img/feb.logo.png">
       <script src="/feb/jquery-3.2.1.min.js" type="text/javascript" charset="utf-8"></script>
-      <script src="/ezer3/client/ezer_cms3.js" type="text/javascript" charset="utf-8"></script>
+      <script src="/$kernel/client/ezer_cms3.js" type="text/javascript" charset="utf-8"></script>
       <script type="text/javascript">
         var Ezer= {
           web: {index:'$index'},

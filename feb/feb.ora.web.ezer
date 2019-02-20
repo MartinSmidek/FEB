@@ -1,3 +1,4 @@
+#pragma switch
 // ---------------------------------------------------------------------------------------------- //
 // Aplikace pro Farní evangelizační buňky - jednoduché CMS                                        //
 //                                                                                                //
@@ -30,7 +31,8 @@ group p {
     last.set(ref);
     c.verze.set(sys('ezer','version')); 
     page.set(ask('page',ref,full_page.get,has_skill('a')));
-    [ eq(page.get('edit'),'clanek'); c.id_c.set(page.get('id')) | c.id_c.init ]; 
+    c.page_edit.set(page.get('edit'));
+    c.page_id.set(page.get('id'));
     w.page.set(page.get('html'));
     function("return jump_fokus();");
   }
@@ -40,7 +42,8 @@ group p {
     last.set(ref);
     c.verze.set(sys('ezer','version')); 
     page.set(ask('page',ref,full_page.get,has_skill('a')));
-    [ eq(page.get('edit'),'clanek'); c.id_c.set(page.get('id')) | c.id_c.init ]; 
+    c.page_edit.set(page.get('edit'));
+    c.page_id.set(page.get('id'));
     w.page.set(page.get('html'));
   }
 # ----------------------------------------------------------------------------==> control bar
@@ -54,13 +57,15 @@ group p {
       proc onclick() { hide_all } }
     button [300,5,,] { title:"[fa-edit] Editovat zobrazený článek, akci, buňku"
       proc onclick() { 
-        eq('akce',page.get('edit')); EDITOR.Akce(page.get('id')); refresh 
-      | eq('bunka',page.get('edit')); EDITOR.Bunka(page.get('id')); refresh 
-      | eq('clanek',page.get('edit')); 
-        { id_c.get; EDITOR.Clanek(id_c.get) | EDITOR.Clanek(page.get('id')) };
+        switch(page_edit.get,
+          'akce',   { EDITOR.Akce(page_id.get) }, 
+          'bunka',  { EDITOR.Bunka(page_id.get) }, 
+          'clanek', { EDITOR.Clanek(page_id.get) }
+        );
         refresh 
     }}
-    field id_c [600,5,50,] { title:'ID článku' format:'r' }
+    field page_edit [574,5,50,] { title:'zdroj' }
+    field page_id   [650,5,40,] { title:'ID' format:'r' }
     check full [150,5,100,] { title:"celá stránka"
       proc onchange() { full_page.set(this.get); cms_go(last.get) } }
     button [-95,5,,] { skill:'a|a', title:"[fa-gears] CMS" 
