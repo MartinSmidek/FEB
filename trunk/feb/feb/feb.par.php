@@ -17,7 +17,7 @@
           /// přístup na použitý gmail
           'mail'=>'web.evangelizacni.bunky@gmail.com',
           'pswd'=>'meditacnizahrada',
-          'name'=>'Komunita Blahoslavenství'
+          'name'=>'Farní evangelizační buňky'
         ),
         'FORM'=>array(
           // přihláška na seminář - bez kontaktu na rodiče
@@ -67,15 +67,15 @@
               'cms_pin_no'  => 
                   "Bohužel tato akce je určena jen pro známé ... Zavolejte nám.",
               'CMS_submit_1'  => 
-                  "Vaše údaje byly zapsány - oprava osoby.",
+                  "Vaše údaje byly zapsány, děkujeme za opravu údajů.",
               'CMS_submit_2'  => 
-                  "Vaše údaje byly zapsány - vytvoření osoby.",
+                  "Vaše údaje byly zapsány, děkujeme za vložení údajů.",
               'CMS_submit_3'  => 
-                  "Vaše údaje byly zapsány - oprava relace.",
+                  "Vaše údaje byly zapsány, děkujeme za vzkaz pro pořadatele.",
               'CMS_submit_4'  => 
-                  "Vaše údaje byly zapsány - už je v relaci.",
+                  "Vaše údaje byly zapsány, Vaše přihláška již byla dříve evidována.",
               'CMS_submit_5'  => 
-                  "Vaše údaje byly zapsány - vytvoření relace.",
+                  "Vaše údaje byly zapsány, Vaši přihlášku jsme vzali na vědomí.",
               'CMS_submit_error_1'  => 
                   "Na tento seminář už jste přihlášen.",
               'cms_submit_missing'  => 
@@ -92,6 +92,7 @@
               'Oulice'    => array('t','*','ulice',177), 
               'Opsc'      => array('t','*','psč',82), 
               'Oobec'     => array('t','*','obec',158),
+              'Oknez'     => array('c','-','jsem kněz'),
               'Rpoznamka' => array('t','-','poznámka pro pořadatele',435,50)
             ),
             'SQL'=>array(

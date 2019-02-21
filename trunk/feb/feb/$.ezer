@@ -432,7 +432,8 @@ table ma { key_id:'id_ma' // lidi/cell
   number id_ma
   number id_cell
   number id_lidi
-  text funkce 
+  text poznamka
+  number funkce 
 }
 table ve { key_id:'id_ve' // cell/fara
   number id_ve
@@ -481,5 +482,10 @@ table _fary { key_id:'id_fary'
 }
 map cis_stat:     table _cis {where:"druh='stat'"     order:'poradi' key_id:'data'}
 map map_smtp_srv: table _cis {where:"druh='smtp_srv'" order:'poradi' key_id:'data'}
+map map_funkce_n: table _cis {where:"druh='funkce_n'" order:'poradi' key_id:'data'}
+map map_funkce_j: table _cis {where:"druh='funkce_j'" order:'poradi' key_id:'data'}
+map map_funkce_m: table _cis {where:"druh='funkce_m'" order:'poradi' key_id:'data'}
+map map_funkce_g: table _cis {where:"druh='funkce_g'" order:'poradi' key_id:'data'}
+map map_funkce_v: table _cis {where:"druh='funkce_v'" order:'poradi' key_id:'data'}
 
 // </editor-fold>

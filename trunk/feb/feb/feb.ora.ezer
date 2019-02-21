@@ -12,6 +12,10 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
   proc Start() {
 //    set_trace('m',1,'*.set_attrib');
 //    set_trace('E',1,'OnLeftOpen,OnRightClose');
+    set_trace('E',1,'mask');
+  }
+  proc Clear() {
+//    clear
   }
   proc onfirstfocus() {
     Start;
@@ -155,9 +159,9 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     mask(1,f); cmd_enable(f,'s','e|j|d'); }
   // jen pro relace
   proc do_zmen() { 
-    mask(0,M); cmd_enable(M,'d|x','s|j'); 
+    mask(0,M.get); cmd_enable(M,'d|x','s|j'); 
     M.same | M.save; M.load; RR.lst.browse_row }
-  proc do_vrat() { mask(0,M); cmd_enable(M,'d|x','s|j'); 
+  proc do_vrat() { mask(0,M.get); cmd_enable(M,'d|x','s|j'); 
     M.load }
   proc spoj(LR) { 
     // 12 pro spojení L.id1+R.id2, 21 pro spojení L.id2+R.id1 
@@ -170,9 +174,9 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     [ RR.lst.selected('this',RR.lst.browse_key) 
     | RR.lst.selected('toggle',RR.lst.browse_key) ];
     RR.lst.browse_row;
-    mask(0,M); cmd_enable(M,'d|x','j|s'); }
+    mask(0,M.get); cmd_enable(M,'d|x','j|s'); }
   proc rozpoj() { var t:object
-    mask(1,M); mask(0,M); 
+    mask(1,M.get); mask(0,M.get); 
     [ RR.lst.selected('this',RR.lst.browse_key); 
       RR.lst.selected('toggle',RR.lst.browse_key) ];
     t.set(M.tab.get);
@@ -229,27 +233,19 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
         "lidé => maily:9,maily => lidé:10,duplicity:11"
       ));
     }
-    proc Init() {
-      clear;
+    proc Init() { var lidi_filtr:number
+      Clear;
       point('Init');
-//      b_lidi.OnLeftOpen;
+      lidi_filtr.set(cconc(eq(mode.get,duplicity.get),"1","!deleted"));
+      b_lidi.lst.set_attrib('optimize.ignore','idn,idj,idm,idg,wch');
+      [ b_lidi.lst.browse_load(lidi_filtr) ];
       LL.OnLeftOpen();
-//      switch(mode.get,
-//        lidi_akce.get,{ b_lidi.OnLeftOpen },
-//        2,{ b_akce.lst.browse_load },
-//        3,{ b_lidi.lst.browse_load },
-//        4,{ b_cell.lst.browse_load },
-//        5,{ b_lidi.lst.browse_load },
-//        6,{ b_fara.lst.browse_load },
-//        7,{ b_lidi.lst.browse_load },
-//        8,{ b_cell.lst.browse_load },
-//        9,{ b_lidi.lst.browse_load },
-//       10,{ b_pack.lst.browse_load } 
-//      );
     }
     select relace [26,12,165,] { css:'relace', format:'t'
       proc onchanged() {
-        clear;
+        Clear;
+        b_lidi.display(0,'adresati');
+        [ eq(mode.get,duplicity.get); b_lidi.lst.browse_load("!deleted") ];  
         mode.set(this.key);
         switch(mode.get,
           lidi_akce.get,{ set_panel(b_lidi.get,f_lidi.get,r_na.get,b_akce.get,f_akce.get); },
@@ -269,7 +265,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
         );
     }}
     label [200,12,,] { title:'<=>', css:'relace' proc onclick() {
-      clear;
+      Clear;
       eq(relace.key,11);
     | eq(relace.key,1,3,5,7,9); relace.key(sum(relace.key,1)); relace.change;
     | relace.key(minus(relace.key,1)); relace.change;
@@ -329,6 +325,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     }
     proc OnRightClose() { 
       point('lidi right close');
+      lst.browse_load;
       cmd.vyber.get;
       RR.lst.selected('ignore');
     }
@@ -385,6 +382,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
           },
           lidi_fara.get, /* je */ { 
             RR.j.set_attrib('join',conc("ON j.id_fara=f.id_fara AND j.id_lidi=",idl.get)); 
+            RR.lst.set_attrib('optimize.ignore','idv,idc');
             [ RR.lst.browse_select(conc('id_lidi=',idl.get),1) ];
             RR.lst.browse_refresh;
           },
@@ -408,8 +406,8 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
         lst.selected('toggle');
         x_last.set(idl.get);
         x_lidi.load(idl.get)
-      | eq(on,0); rozpoj
-      | eq(b_lidi.get,RR.get); spoj(21) // xxxx_lidi
+      | eq(on,0); M.Rozpoj()
+      | eq(on,1); M.Spoj() 
       }
       menu { type:'context'
         item { title:'přehled a export vybraných',
@@ -553,21 +551,22 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     proc Init() {
       form.init; cmd_enable(form,'e','s'); html.set(''); 
     }
-    // elementy
+    // elementy akce
     field web_text { data:akce.web_text }
     field [-10,0,50,] { data:akce.id_akce, format:'ro' }
     field [10,20,190,] { tag:'N' title:'^název', data:akce.nazev }
     field [210,20,85,] { tag:'N' type:'date', title:'^začátek', data:akce.zacatek, format:'r' }
     field [300,20,85,] { type:'date', title:'^ukončení', data:akce.konec, format:'r' }
+    // web akce
     field [10,60,190,] { title:'^web:menu', data:akce.web_menu }
-    check [210,60,190,] { title:'online přihláška', data:akce.web_prihl }
-    label [320,45,135,20] { title:'web:ukázat článek' css:'Check3'}
-    radio [320,60,135,20] { data:akce.web_stav value:'0'
+    label [210,45,135,20] { title:'web:ukázat článek' css:'Check3'}
+    radio [210,60,135,20] { data:akce.web_stav value:'0'
       case [0,0,40,] { title:'ne', expr:'0' }
       case [35,0,60,] { title:'redakci', expr:'1' }
       case [90,0,60,] { title:'ano', expr:'2' }
       proc onchange () {
     }} 
+    check [350,60,100,] { title:'online přihláška', data:akce.web_prihl }
     label html [10,85,,] { style:"overflow:auto;width:calc(100% - 15px);height:calc(100% - 90px)" }
     // procedury
     proc onchanged() { on_chng(form); }
@@ -700,14 +699,6 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
       [ cmd.vyber.get; RR.lst.selected('use') | RR.lst.selected('ignore') ];
       [ lst.browse_key; lst.browse_seek(conc('p.id_pack=',lst.browse_key),1) 
       | lst.browse_load(1) ];
-
-//      echo('pack left open');
-//      // PACK - LIDI
-//      b_lidi.adresati.display(1);
-//      lst.set_attrib('optimize.ignore','idg,idl');
-//      lst.wgo1.set_attrib('expr',"MIN(g.stav)");
-//      lst.wgo2.set_attrib('expr',"MAX(g.stav)");
-//      b_lidi.lst.wch.set_attrib('expr',"g.stav")
     }
     proc OnRightClose() { 
       point('pack right close');
@@ -828,8 +819,8 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
       RR.lst.selected('ignore');
     }
     view c: table cell
-    view m: table ma { join_type:'LEFT', join:"USING(id_cell)" }
-    view v: table ve { join_type:'LEFT', join:"USING(id_cell)" }
+    view m: table ma { join_type:'LEFT', join:"ON m.id_cell=c.id_cell" }
+    view v: table ve { join_type:'LEFT', join:"ON v.id_cell=c.id_cell" }
     browse lst [5,20,,] { rows:_R, qry_rows:1 optimize:°{ignore:''} group_by:"c.id_cell"
       show idc { data:c.id_cell }
       show idm { data:m.id_ma }
@@ -870,13 +861,27 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
       form.init; cmd_enable(form,'e','s'); 
     }
     proc Load(k) {
-      form.load(k); cmd_enable(form,'e','s'); 
+      form.load(k); html.set(web_text.get);
+      cmd_enable(form,'e','s'); 
     }
-    // elementy
+    // elementy akce
+    field web_text { data:cell.web_text }
     field [-10,0,50,] { data:cell.id_cell, format:'ro' }
-    field nazev [10,20,177,] { title:'^název', data:cell.nazev }
-    field stav [205,20,189,] { title:'^stav', data:cell.stav }
-    button [10,-10,,] { title:"[fa-upload] web", proc onclick() { 
+    field nazev [10,20,190,] { title:'^název', data:cell.nazev }
+    field stav [210,20,189,] { title:'^stav', data:cell.stav }
+    // web akce
+    field [10,60,190,] { title:'^web:menu', data:cell.web_menu }
+    label [210,45,135,20] { title:'web:ukázat článek' css:'Check3'}
+    radio [210,60,135,20] { data:cell.web_stav value:'0'
+      case [0,0,40,] { title:'ne', expr:'0' }
+      case [35,0,60,] { title:'redakci', expr:'1' }
+      case [90,0,60,] { title:'ano', expr:'2' }
+      proc onchange () {
+    }} 
+    label html [10,85,,] { style:"overflow:auto;width:calc(100% - 15px);height:calc(100% - 90px)" }
+    // specifické operace
+    label  [5,-5,117,30] { css:'parm' }
+    button [13,-10,,] { title:"[fa-upload] článek na web" proc onclick() { 
       EDITOR.Bunka(form.key) }}
     // procedury
     proc onchanged() { on_chng(form); }
@@ -898,6 +903,8 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
       m.berweb.enable(web_change.get);
       cmd_enable(form,'d|x','j|s') 
     | Init }
+    proc Spoj() { eq(LL.get,b_lidi.get); spoj(12) | spoj(21) }
+    proc Rozpoj() { rozpoj }
     var tab:object
     // public procedury
     proc onstart() { tab.set(na) }
@@ -946,6 +953,8 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
       form.load(0,conc('id_lidi=',f_lidi.key,' AND id_fara=',f_fara.key));
       cmd_enable(form,'d|x','j|s') 
     | Init }
+    proc Spoj() { eq(LL.get,b_lidi.get); spoj(12) | spoj(21) }
+    proc Rozpoj() { rozpoj }
     var tab:object
     // globální funkce
     proc onstart() { tab.set(je) }
@@ -975,6 +984,8 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
       form.load(0,conc('id_lidi=',f_lidi.key,' AND id_pack=',f_pack.key));
       cmd_enable(form,'d|x','j|s') 
     | Init }
+    proc Spoj() { eq(LL.get,b_lidi.get); spoj(12) | spoj(21) }
+    proc Rozpoj() { rozpoj }
     var tab:object
     // globální funkce
     proc onstart() { tab.set(go) }
@@ -1004,6 +1015,15 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
       form.load(0,conc('id_lidi=',f_lidi.key,' AND id_cell=',f_cell.key));
       cmd_enable(form,'d|x','j|s') 
     | Init }
+    proc Spoj() {
+        funkce.key(2); funkce.change;
+        [ eq(LL.get,b_lidi.get); spoj(12) | spoj(21) ];
+//        [ eq(mode.get,lidi_cell.get); spoj(12) | spoj(21) ];
+        form.plain;
+    }
+    proc Rozpoj() {
+      rozpoj
+    }
     var tab:object
     // globální funkce
     proc onstart() { tab.set(ma) }
@@ -1012,17 +1032,19 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     field id1 {data:m.id_lidi }
     field id2 {data:cell.id_cell }
     // položky
-    field funkce [10,20,100,] { tag:'x', title:'^funkce', data:m.funkce }
+    select funkce [10,20,120,] { tag:'x', title:'^funkce', type:'map', data:m.funkce 
+        options:map_funkce_m.hodnota }
+    edit poznamka [10,55,448,75] { tag:'x', title:'^poznámka', data:m.poznamka }
     // procedury
     proc onchanged() { on_chng(form); }
     // operace
     label [-10,-5,239,30] { css:'parm' }
     button [-194,-10,,] { tag:'s', title:"[fa-save] ulož", proc onclick() { do_zmen }}
     button [-138,-10,,] { tag:'s', title:"[fa-undo] zpět", proc onclick() { do_vrat }}
-    button  [-82,-10,,] { tag:'j', title:"[fa-plug fa-rotate-180] spoj"
-      proc onclick() { eq(mode.get,lidi_cell.get); spoj(12) | spoj(21) }}
+    button  [-82,-10,,] { tag:'j', title:"[fa-plug fa-rotate-180] spoj"  
+      proc onclick() { Spoj }}
     button  [-15,-10,,] { tag:'d', title:"[fa-plug fa-rotate-180 fa-red] rozpoj", 
-      proc onclick() { rozpoj }}
+      proc onclick() { Rozpoj }}
   }
   // ------------------------------------------------------------- CELL ve FARA
   form _r_ve [,,1,1] { css:'rel', style:'overflow:auto'
@@ -1033,6 +1055,8 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
       form.load(0,conc('id_cell=',f_cell.key,' AND id_fara=',f_fara.key));
       cmd_enable(form,'d|x','j|s') 
     | Init }
+    proc Spoj() { eq(LL.get,b_lidi.get); spoj(12) | spoj(21) }
+    proc Rozpoj() { rozpoj }
     var tab:object
     // globální funkce
     proc onstart() { tab.set(ve) }
@@ -1084,6 +1108,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
   panel ADRESATI [0,0,410,270] { title:' Přidat adresáty mailu', type:'popup'
     proc Pridej(_idp) {
       curr_idp.set(_idp);
+      g.init;
       g.akce.browse_load;
       g.maily.browse_load;
       g.display(2,'a');
@@ -1095,7 +1120,8 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     var curr_idp: number
     form _g [,,400,270] {
       proc onstart() {
-        vyber_adr.selects("z účastníků minulé akce:1,z adresátů jiných mailů:2");
+        vyber_adr.selects(conc("z účastníků minulé akce:1,z adresátů jiných mailů:2,",
+              "podle vlastností a rolí:3"));
       }
       var koho:text,
           tab:text, rel:text,
@@ -1104,11 +1130,13 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
         proc onchanged() { 
           switch(this.key,
             1,{ form.display(2,'a'); koho.set('účastníky'); tab.set('akce'); rel.set('na'); },
-            2,{ form.display(2,'m'); koho.set('adresáty'); tab.set('pack'); rel.set('go'); }
+            2,{ form.display(2,'m'); koho.set('adresáty'); tab.set('pack'); rel.set('go'); },
+            3,{ form.display(2,'v'); koho.set('vybrané'); }
           );
           pridat.set(conc("<i class='fa fa-plus'></i> přidat ",koho.get));
           ubrat.set(conc("<i class='fa fa-minus'></i> ubrat ",koho.get));
       }}
+      // a - účastníci akcí
       view na_a: table akce { join:"USING (id_akce)" }
       view na_l: table lidi { join:"USING (id_lidi)" }
       browse akce [0,40,,] { tag:'a' rows:10 qry_rows:1 group_by:'id_akce'
@@ -1120,6 +1148,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
         show lidi [,,45,] { title:'adres' expr:"COUNT(*)" format:'r' }
         proc onrowclick() { id_tab.set(ida.get); }
       }
+      // m - adresáti mailů
       view go_p: table pack { join:"USING (id_pack)" }
       view go_l: table lidi { join:"USING (id_lidi)" }
       browse maily [0,40,,] { tag:'m' rows:10 qry_rows:1 group_by:'id_pack'
@@ -1131,25 +1160,25 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
         show lidi [,,45,] { title:'adres' expr:"COUNT(*)" format:'r' }
         proc onrowclick() { id_tab.set(idp.get); }
       }
+      // v - podle vlastností a rolí
+      check knez [0,50,100,] { tag:'v' format:'t' title:"kněží" }
+      check vedb [0,70,100,] { tag:'v' format:'t' title:"vedoucí buněk" }
+      check clnb [0,90,100,] { tag:'v' format:'t' title:"členové buněk" }
       // ovládání změn
+      proc zmenit(on,sloveso) { var y:text
+        { eq(vyber_adr.key,1,2);
+          y.set(ask('feb_pack_menit_lidi_12',curr_idp.get,on,rel.get,tab.get,id_tab.get))
+        |  eq(vyber_adr.key,3);
+          y.set(ask('feb_pack_menit_lidi_3',curr_idp.get,on,knez.get,vedb.get,clnb.get))
+        };
+        RR.lst.browse_select(conc('g.id_pack=',curr_idp.get),1);
+        RR.lst.browse_refresh;
+        alert("bylo ",sloveso," ",y," adresátů")
+      }
       label [307,40,90,50] { title:'pozměnit již vybrané adresáty:' }
-      button pridat [305,76,,] { title:'přidat účastníky' 
-        proc onclick() { var y:text
-          y.set(ask('feb_pack_pridat_lidi',curr_idp.get,rel.get,tab.get,id_tab.get));
-          RR.lst.browse_select(conc('g.id_pack=',curr_idp.get),1);
-          RR.lst.browse_refresh;
-          alert("bylo přidáno ",y," adresátů")
-      }}
-      button ubrat [305,102,,] { title:'ubrat účastníky' 
-        proc onclick() { var y:text
-          y.set(ask('feb_pack_ubrat_lidi',curr_idp.get,rel.get,tab.get,id_tab.get));
-          RR.lst.browse_select(conc('g.id_pack=',curr_idp.get),1);
-          RR.lst.browse_refresh;
-          alert("bylo ubráno ",y," adresátů")
-      }}
-      button [305,-10,,] { title:'[fa-power-off] [konec' 
-        proc onclick() { panel.hide;
-      }}
+      button pridat [305,76,,] { title:'přidat účastníky' proc onclick() { zmenit(1,"přidáno") }}
+      button ubrat [305,102,,] { title:'ubrat účastníky' proc onclick() { zmenit(0,"ubráno") }}
+      button [305,-10,,] { title:'[fa-power-off] [konec' proc onclick() { panel.hide; }}
     }
   }
   // --------------------------------- odesílání mailů
