@@ -1,28 +1,41 @@
 <?php # (c) 2017 Martin Smidek <martin@smidek.eu>
 /** =========================================================================================> MAILY */
-# ----------------------------------------------------------------------------- feb pack_pridat_lidi
+# --------------------------------------------------------------------------- feb pack_menit_lidi_12
 # přidat adresáty z jiné tabulky
-function feb_pack_pridat_lidi($idp,$rel,$tab,$id_tab) {
+function feb_pack_menit_lidi_12($idp,$on,$rel,$tab,$id_tab) {
   $difs= 0;
   $rl= mysql_qry("SELECT id_lidi FROM $rel WHERE id_$tab=$id_tab");
-  while ( $rl && list($idl)= mysql_fetch_row($rl) ) {
-    $idg= select('id_lidi','go',"id_pack=$idp AND id_lidi=$idl");
-    if ( !$idg ) {
-      query("INSERT INTO go (id_pack,id_lidi,stav) VALUE ($idp,$idl,0)");
-      $difs+= mysql_affected_rows();
-    }
+  $difs+= feb_pack_menit($idp,$on,$rl);
+  return $difs;
+}
+# --------------------------------------------------------------------------- feb pack_menit_lidi_3
+# přidat adresáty z jiné tabulky
+function feb_pack_menit_lidi_3($idp,$on,$kneze,$vedouci,$cleny) {
+  $difs= 0;
+  // podle vlastností
+  if ( $kneze ) {
+    $rl= mysql_qry("SELECT id_lidi FROM lidi WHERE !deleted AND knez=1");
+    $difs+= feb_pack_menit($idp,$on,$rl);
+  }
+  //  podle roli v bunk-ma-lidi
+  if ( $vedouci || $cleny ) {
+    $cond= "funkce & ".(($vedouci?1:0) | ($cleny?2:0));
+    $rl= mysql_qry("SELECT id_lidi FROM ma JOIN lidi USING (id_lidi) WHERE !deleted AND $cond");
+    $difs+= feb_pack_menit($idp,$on,$rl);
   }
   return $difs;
 }
-# ------------------------------------------------------------------------------ feb pack_ubrat_lidi
-# ubrat adresáty z jiné tabulky
-# -- ubrat lze jen neposlané maily
-function feb_pack_ubrat_lidi($idp,$rel,$tab,$id_tab) {
+# ----------------------------------------------------------------------------------- feb pack_menit
+# přidat vybrané adresáty - $rl musí vracet id_lidi
+function feb_pack_menit($idp,$on,$rl) {
   $difs= 0;
-  $rl= mysql_qry("SELECT id_lidi FROM $rel WHERE id_$tab=$id_tab");
   while ( $rl && list($idl)= mysql_fetch_row($rl) ) {
     $idg= select('id_go','go',"id_pack=$idp AND id_lidi=$idl");
-    if ( $idg ) {
+    if ( !$idg && $on ) {
+      query("INSERT INTO go (id_pack,id_lidi,stav) VALUE ($idp,$idl,0)");
+      $difs+= mysql_affected_rows();
+    }
+    if ( $idg && !$on ) {
       query("DELETE FROM go WHERE id_go=$idg");
       $difs+= mysql_affected_rows();
     }
