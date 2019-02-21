@@ -22,7 +22,7 @@
         'FORM'=>array(
           // přihláška na seminář - bez kontaktu na rodiče
           'seminar'=>array(
-            'TYPE'=>array('allow_unknown','confirm'),
+            'TYPE'=>array('allow_unknown','confirm','send_mail'),
             'TEXT'=>array( 
               'cms_confirm'  => 
                   "<span style='font-size:8pt'>
@@ -82,6 +82,8 @@
                   "<span class='problem'>Vyplňte prosím správně chybějící položky.</span>",
               'cms_error'=>
                   "Při zpracování formuláře došlo bohužel k chybě, selhalo spojení se serverem" ,
+              'cms_send_mail_error'=>
+                  "Při zpracování formuláře došlo bohužel k chybě, selhalo spojení se serverem" ,
               'cms_IE_forbiden'=>
                   "Online přihlášení lze použít pouze z prohlížečů Chrome, Firefox, Edge" 
             ),
@@ -102,12 +104,13 @@
               'mail'=>array("feb","SELECT id_lidi FROM lidi WHERE !deleted AND mail='{MAIL}'"),
               'select_O'=>array("feb","SELECT {*} FROM lidi WHERE !deleted AND id_lidi={IDO}"),
               'select_R'=>array("feb","SELECT {*} FROM na WHERE id_lidi={IDO} AND id_akce={IDA}"),
+              'select_A'=>array("feb","SELECT {*} FROM akce WHERE id_akce={IDA}"),
               'Ochange'=>'web_change',
               'Rchange'=>'web_change',
               ''=>''
-//            ),
-//            'CALL'=>array(
-//              'confirm_O'=> "cms_confirm"       // parametry IDO,IDA
+            ),
+            'CALL'=>array(
+              'sendmail_OA'=> "cms_send_potvrzeni"       // parametry IDO,IDA
             )
           ),
           // přihlášení do CMS
