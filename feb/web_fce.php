@@ -599,4 +599,20 @@ function ask_server($x) {
 end:
   return 1;
 }
+/** =================================================================================> CMS PŘIHLÁŠKY */
+# funkce pro online přihlášky
+# ------------------------------------------------------------------------------- cms send_potvrzeni
+# pošle potvrzení o přijetí přihlášky
+function cms_send_potvrzeni($idl,$ida) {
+  $nazev= select('nazev','akce',"id_akce=$ida");
+  $mail= select('mail','lidi',"id_lidi=$idl");
+  $reply= "evangelizacnibunky@seznam.cz";
+  $subj= "Potvrzení přijetí přihlášky na  $nazev";
+  $body= "Dobrý den, potvrzujeme vaši přihlášku na seminář. 
+    <br>Bližší info vám zašleme dva týdny předem.
+    <br><br>Přeji vám hezký den.
+    <br>sr. Alžběta, mail: <a href='mailto:$reply'>$reply</a>";
+  $ok= cms_mail_send($mail,$subj,$body,$reply);
+  return $ok;    
+}
 ?>

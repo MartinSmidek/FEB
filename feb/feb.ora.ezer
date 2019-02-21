@@ -12,7 +12,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
   proc Start() {
 //    set_trace('m',1,'*.set_attrib');
 //    set_trace('E',1,'OnLeftOpen,OnRightClose');
-    set_trace('E',1,'mask');
+//    set_trace('E',1,'mask');
   }
   proc Clear() {
 //    clear
@@ -362,7 +362,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
       proc onrowclick() { 
         point(conc('lidi rowclick id_lidi=',lst.browse_key));
         f_lidi.Load(idl.get);
-        M.Init;
+        M.Init();
         switch(mode.get,
           lidi_akce.get, /* na */ { 
             RR.n.set_attrib('join',conc("ON n.id_akce=a.id_akce AND n.id_lidi=",idl.get));
@@ -903,7 +903,11 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
       m.berweb.enable(web_change.get);
       cmd_enable(form,'d|x','j|s') 
     | Init }
-    proc Spoj() { eq(LL.get,b_lidi.get); spoj(12) | spoj(21) }
+    proc Spoj() { 
+      funkce.key(1); funkce.change;
+      [ eq(LL.get,b_lidi.get); spoj(12) | spoj(21) ];
+      form.plain;
+    }
     proc Rozpoj() { rozpoj }
     var tab:object
     // public procedury
@@ -914,9 +918,11 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     field id2 {data:akce.id_akce }
     field web_change { data:na.web_change }
     // položky
-    field funkce [10,20,100,] { tag:'x', title:'^funkce', data:n.funkce }
+    select funkce [10,20,100,] { tag:'x', title:'^funkce', type:'map', data:n.funkce 
+        options:map_funkce_n.hodnota }
     field web_change [120,20,90,] { tag:'x' type:'date' title:'^změna z webu', data:n.web_change }
-    edit poznamka [10,55,448,75] { tag:'x', title:'^poznámka', data:n.poznamka }
+    edit poznamka [10,55,448,75] { tag:'x', title:'^poznámka', data:n.poznamka 
+        style:"width:calc(100% - 25px)" }
     // procedury
     proc onchanged() { on_chng(form); }
     // operace
@@ -924,9 +930,9 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     button [-194,-10,,] { tag:'s', title:"[fa-save] ulož", proc onclick() { do_zmen }}
     button [-138,-10,,] { tag:'s', title:"[fa-undo] zpět", proc onclick() { do_vrat }}
     button  [-82,-10,,] { tag:'j', title:"[fa-plug fa-rotate-180] spoj", 
-      proc onclick() { eq(mode.get,lidi_akce.get); spoj(12) | spoj(21) }}
+      proc onclick() { Spoj }}
     button  [-15,-10,,] { tag:'d', title:"[fa-plug fa-rotate-180 fa-red] rozpoj"
-      proc onclick() { rozpoj }}
+      proc onclick() { Rozpoj }}
     # ------------------------==> . kontextové_menu
     menu m { type:'context'
       item { title:'ukázat změny', proc onclick () {
@@ -953,7 +959,11 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
       form.load(0,conc('id_lidi=',f_lidi.key,' AND id_fara=',f_fara.key));
       cmd_enable(form,'d|x','j|s') 
     | Init }
-    proc Spoj() { eq(LL.get,b_lidi.get); spoj(12) | spoj(21) }
+    proc Spoj() { 
+      funkce.key(1); funkce.change;
+      [ eq(LL.get,b_lidi.get); spoj(12) | spoj(21) ];
+      form.plain;
+    }
     proc Rozpoj() { rozpoj }
     var tab:object
     // globální funkce
@@ -963,7 +973,8 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     field id1 {data:j.id_lidi }
     field id2 {data:fara.id_fara }
     // položky
-    field funkce [10,20,100,] { tag:'x', title:'^funkce', data:j.funkce }
+    select funkce [10,20,150,] { tag:'x', title:'^funkce', type:'map', data:j.funkce 
+        options:map_funkce_j.hodnota }
     // procedury
     proc onchanged() { on_chng(form); }
     // operace
@@ -971,9 +982,9 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     button [-194,-10,,] { tag:'s', title:"[fa-save] ulož", proc onclick() { do_zmen }}
     button [-138,-10,,] { tag:'s', title:"[fa-undo] zpět", proc onclick() { do_vrat }}
     button  [-82,-10,,] { tag:'j', title:"[fa-plug fa-rotate-180] spoj"
-      proc onclick() { eq(mode.get,lidi_fara.get); spoj(12) | spoj(21) }}
+      proc onclick() { Spoj }}
     button  [-15,-10,,] { tag:'d', title:"[fa-plug fa-rotate-180 fa-red] rozpoj", 
-      proc onclick() { rozpoj }}
+      proc onclick() { Rozpoj }}
   }
   // ------------------------------------------------------------- LIDI go MAIL
   form _r_go [,,1,1] { css:'rel', style:'overflow:auto'
@@ -984,7 +995,11 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
       form.load(0,conc('id_lidi=',f_lidi.key,' AND id_pack=',f_pack.key));
       cmd_enable(form,'d|x','j|s') 
     | Init }
-    proc Spoj() { eq(LL.get,b_lidi.get); spoj(12) | spoj(21) }
+    proc Spoj() { 
+      funkce.key(0); funkce.change;
+      [ eq(LL.get,b_lidi.get); spoj(12) | spoj(21) ];
+      form.plain;
+    }
     proc Rozpoj() { rozpoj }
     var tab:object
     // globální funkce
@@ -994,7 +1009,8 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     field id1 {data:g.id_lidi }
     field id2 {data:pack.id_pack }
     // položky
-    field stav [10,20,100,] { tag:'x', title:'^stav', data:g.stav }
+    select funkce [10,20,150,] { tag:'x', title:'^stav', type:'map', data:g.stav 
+        options:map_funkce_g.hodnota }
     // procedury
     proc onchanged() { on_chng(form); }
     // operace
@@ -1002,9 +1018,9 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     button [-194,-10,,] { tag:'s', title:"[fa-save] ulož", proc onclick() { do_zmen }}
     button [-138,-10,,] { tag:'s', title:"[fa-undo] zpět", proc onclick() { do_vrat }}
     button  [-82,-10,,] { tag:'j', title:"[fa-plug fa-rotate-180] spoj", 
-      proc onclick() { eq(mode.get,lidi_pack.get); spoj(12) | spoj(21) }}
+      proc onclick() { Spoj }}
     button  [-15,-10,,] { tag:'d', title:"[fa-plug fa-rotate-180 fa-red] rozpoj", 
-      proc onclick() { rozpoj }}
+      proc onclick() { Rozpoj }}
   }
   // ------------------------------------------------------------- LIDI ma CELL
   form _r_ma [,,1,1] { css:'rel', style:'overflow:auto'
@@ -1016,10 +1032,9 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
       cmd_enable(form,'d|x','j|s') 
     | Init }
     proc Spoj() {
-        funkce.key(2); funkce.change;
-        [ eq(LL.get,b_lidi.get); spoj(12) | spoj(21) ];
-//        [ eq(mode.get,lidi_cell.get); spoj(12) | spoj(21) ];
-        form.plain;
+      funkce.key(2); funkce.change;
+      [ eq(LL.get,b_lidi.get); spoj(12) | spoj(21) ];
+      form.plain;
     }
     proc Rozpoj() {
       rozpoj
