@@ -424,7 +424,7 @@ end:
 function menu_upd_bunka($wid) {
   global $web_db;
   $n= 0;
-  $mid_akce= select("mid","menu","wid=$wid AND ref='bunka'",$web_db);
+  $mid_akce= select("mid","menu","wid=$wid AND ref='bunky-v-cr'",$web_db);
   if ( !$mid_akce ) goto end;
   // odstraň staré podmenu
   query("DELETE FROM menu WHERE wid=$wid AND mid_top=$mid_akce",$web_db);

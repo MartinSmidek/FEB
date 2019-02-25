@@ -4,7 +4,11 @@
 //                                                                                                //
 // Ezer3                                                (c) 2018 Martin Šmídek <martin@smidek.eu> //
 // ---------------------------------------------------------------------------------------------- //
+proc onfocus () {
+  p.do_refresh.get; p.refresh; p.do_refresh.set(0)
+}
 group p { 
+  var do_refresh=0      // trigger pro vyvolání refresh při onfocus po změně menu
   var do_go=1
   var last='home'       //'home'
   var full_page=0       // ukázat celou stránku

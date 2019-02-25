@@ -229,7 +229,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
       relace.selects(conc(
         "lidé => akce:1,akce => lidé:2,lidé => buňky:3,buňky => lidé:4,",
         "lidé => farnosti:5,farnosti => lidé:6,",
-//        "buňky => farnosti:7,farnosti => buňky:8,",
+        "buňky => farnosti:7,farnosti => buňky:8,",
         "lidé => maily:9,maily => lidé:10,duplicity:11"
       ));
     }
@@ -325,7 +325,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     }
     proc OnRightClose() { 
       point('lidi right close');
-      lst.browse_load;
+      lst.browse_load(1,'','',0,0,1);
       cmd.vyber.get;
       RR.lst.selected('ignore');
     }
@@ -510,6 +510,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
       proc onrowclick() { 
         point(conc('akce rowclick id_akce=',lst.browse_key));
         f_akce.Load(ida.get);
+        M.Init();
         switch(mode.get,
           lidi_akce.get, /* > na > */ { 
             r_na.Load;
@@ -551,6 +552,8 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     proc Init() {
       form.init; cmd_enable(form,'e','s'); html.set(''); 
     }
+    // procedury
+    proc Save() { ask('menu_upd_akce',2); web.p.refresh() }
     // elementy akce
     field web_text { data:akce.web_text }
     field [-10,0,50,] { data:akce.id_akce, format:'ro' }
@@ -572,11 +575,12 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     proc onchanged() { on_chng(form); }
     // specifické operace
     label  [5,-5,117,30] { css:'parm' }
-    button [13,-10,,] { title:"[fa-upload] článek na web" proc onclick() { 
-      EDITOR.Akce(form.key) }}
+    button [13,-10,,] { tag:'e', title:"[fa-upload] článek na web" proc onclick() { 
+      EDITOR.Akce(form.key); Save }}
     // základní operace
     label  [-10,-5,226,30] { css:'parm' }
-    button [-181,-10,,] { tag:'s', title:"[fa-save] ulož", proc onclick() { do_uloz(form,b_akce.lst) }}
+    button [-181,-10,,] { tag:'s', title:"[fa-save] ulož", proc onclick() { 
+      do_uloz(form,b_akce.lst); Save }}
     button [-125,-10,,] { tag:'s', title:"[fa-undo] zpět", proc onclick() { do_zpet(form,b_akce.lst) }}
     button  [-67,-10,,] { tag:'e', title:"[fa-heart] nový",proc onclick() { do_novy(form,b_akce.lst) }}
     button  [-15,-10,,] { tag:'e', title:"[fa-times fa-red] zruš"
@@ -599,6 +603,9 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
         fara_lidi.get, /* je */ {
           b_lidi.lst.set_attrib('optimize.ignore','idn,idm,idg');
           b_lidi.lst.wch.set_attrib('expr',"'0'");
+        },
+        fara_cell.get, /* ve */ {
+          b_cell.lst.set_attrib('optimize.ignore','idm,idl');
         }
       );
     }
@@ -610,7 +617,8 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     view f: table fara
     view j: table je { join_type:'LEFT', join:"... id_fara ..." }
     view v: table ve { join_type:'LEFT', join:"... id_fara ..." }
-    browse lst [5,20,,] { rows:_R, qry_rows:1 optimize:°{ignore:''} group_by:"f.id_fara"
+    browse lst [5,20,,] { rows:_R, qry_rows:1 group_by:"f.id_fara"
+        optimize:°{ignore:''} 
       show idf { data:f.id_fara }
       show idj { data:j.id_je }
       show idl { data:j.id_lidi }
@@ -621,6 +629,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
       proc onrowclick() { 
         point(conc('fara rowclick id_fara=',lst.browse_key));
         f_fara.Load(idf.get);
+        M.Init();
         switch(mode.get,
           lidi_fara.get, /* je */ {
             r_je.Load;
@@ -629,6 +638,14 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
             b_lidi.j.set_attrib('join',conc("ON l.id_lidi=j.id_lidi AND j.id_fara=",idf.get)); 
             b_lidi.lst.browse_select(conc('j.id_fara=',idf.get),1);
             b_lidi.lst.browse_refresh;
+          },
+          cell_fara.get, /* ve */ {
+            r_ve.Load;
+          },
+          fara_cell.get, /* ve */ {
+            b_cell.v.set_attrib('join',conc("ON c.id_cell=v.id_cell AND v.id_fara=",idf.get)); 
+            b_cell.lst.browse_select(conc('v.id_fara=',idf.get),1);
+            b_cell.lst.browse_refresh;
           }
         );
 //        [ // LIDI
@@ -670,8 +687,8 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     // procedury
     proc onchanged() { on_chng(form); }
     // specifické operace
-    label  [5,-5,117,30] { css:'parm' }
-    button  [13,-10,,] { tag:'e', title:"[fa-download] najdi v seznamu",proc onclick() { 
+    label  [5,-5,137,30] { css:'parm' }
+    button  [13,-10,,] { tag:'e', title:"[fa-download] přidej ze seznamu",proc onclick() { 
       FARY.Show(form); 
       foreach(form.tagged('N'),do_change)
     }}
@@ -718,6 +735,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
       proc onrowclick() { 
         point(conc('pack rowclick id_pack=',lst.browse_key));
         f_pack.Load(idp.get);
+        M.Init();
         switch(mode.get,
           lidi_pack.get, /* > go > */ { 
             r_go.Load;
@@ -783,11 +801,11 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
         style:"overflow:auto;width:calc(100% - 15px);height:calc(100% - 107px)" }
     // specifické operace
     label p_cmd [5,-5,175,30] { css:'parm' }
-    button [14,-10,,] { title:"[fa-edit] upravit text" proc onclick() { 
+    button [14,-10,,] { tag:'e', title:"[fa-edit] upravit text" proc onclick() { 
       EDITOR.Pack(form.key);
       Load(form.key);
     }}
-    button [107,-10,,] { title:"[fa-send] odeslat", proc onclick() { MAIL.Send }}
+    button [107,-10,,] { tag:'e', title:"[fa-send] odeslat", proc onclick() { MAIL.Send }}
     // procedury
     proc onchanged() { on_chng(form); }
     // základní operace
@@ -810,6 +828,9 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
         cell_lidi.get, /* ma */ {
           b_lidi.lst.set_attrib('optimize.ignore','idn,idj,idg');
           b_lidi.lst.wch.set_attrib('expr',"'0'");
+        },
+        cell_fara.get, /* ve */ {
+          b_fara.lst.set_attrib('optimize.ignore','idj,idl');
         }
       );
     }
@@ -834,6 +855,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
       proc onrowclick() { 
         point(conc('cell rowclick id_cell=',lst.browse_key));
         f_cell.Load(idc.get);
+        M.Init();
         switch(mode.get,
           lidi_cell.get, /* ma */ {
             r_ma.Load;
@@ -842,6 +864,14 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
             b_lidi.m.set_attrib('join',conc("ON l.id_lidi=m.id_lidi AND m.id_cell=",idc.get)); 
             b_lidi.lst.browse_select(conc('m.id_cell=',idc.get),1);
             b_lidi.lst.browse_refresh;
+          },
+          fara_cell.get, /* ve */ {
+            r_ve.Load;
+          },
+          cell_fara.get, /* ve */ {
+            b_fara.v.set_attrib('join',conc("ON f.id_fara=v.id_fara AND v.id_cell=",idc.get)); 
+            b_fara.lst.browse_select(conc('v.id_cell=',idc.get),1);
+            b_fara.lst.browse_refresh;
           }
         );
       }
@@ -864,6 +894,8 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
       form.load(k); html.set(web_text.get);
       cmd_enable(form,'e','s'); 
     }
+    // procedury
+    proc Save() { ask('menu_upd_bunka',2); web.p.do_refresh.set(1); }
     // elementy akce
     field web_text { data:cell.web_text }
     field [-10,0,50,] { data:cell.id_cell, format:'ro' }
@@ -881,13 +913,14 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     label html [10,85,,] { style:"overflow:auto;width:calc(100% - 15px);height:calc(100% - 90px)" }
     // specifické operace
     label  [5,-5,117,30] { css:'parm' }
-    button [13,-10,,] { title:"[fa-upload] článek na web" proc onclick() { 
-      EDITOR.Bunka(form.key) }}
+    button [13,-10,,] { tag:'e', title:"[fa-upload] článek na web" proc onclick() { 
+      EDITOR.Bunka(form.key); Save }}
     // procedury
     proc onchanged() { on_chng(form); }
     // operace
     label [-10,-5,226,30] { css:'parm' }
-    button [-181,-10,,] { tag:'s', title:"[fa-save] ulož", proc onclick() { do_uloz(form,b_cell.lst) }}
+    button [-181,-10,,] { tag:'s', title:"[fa-save] ulož", proc onclick() { 
+      do_uloz(form,b_cell.lst); Save }}
     button [-125,-10,,] { tag:'s', title:"[fa-undo] zpět", proc onclick() { do_zpet(form,b_cell.lst) }}
     button  [-67,-10,,] { tag:'e', title:"[fa-heart] nový",proc onclick() { do_novy(form,b_cell.lst) }}
     button  [-15,-10,,] { tag:'e', title:"[fa-times fa-red] zruš",proc onclick() { do_zrus(form,b_cell.lst)}}
@@ -1080,7 +1113,10 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     field id [-10,0,50,] { data:v.id_ve, help:'-', format:'ro' }
     field id1 {data:cell.id_cell }
     field id2 {data:fara.id_fara }
-    field funkce [10,20,100,] { tag:'x', title:'^funkce', data:v.funkce }
+    // položky
+    select funkce [10,20,210,] { tag:'x', title:'^druh buňky', type:'map', data:v.funkce 
+        options:map_funkce_v.hodnota }
+    edit poznamka [10,55,448,75] { tag:'x', title:'^poznámka', data:v.poznamka }
     // procedury
     proc onchanged() { on_chng(form); }
     // operace
@@ -1279,4 +1315,6 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
   }
 }
 // CMS sdruženého webu
-panel web { type:'plain', title:'[fa-laptop] Web', _sys:'*', include:'onload' } 
+panel web { type:'plain', title:'[fa-laptop] Web', _sys:'*', include:'onload' 
+  group p { var do_refresh:number }
+} 
