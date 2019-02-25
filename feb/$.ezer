@@ -99,7 +99,7 @@ panel EDITOR [0,0,710,530] { title:' Úprava textu', type:'popup'
   # oprava textu akce
   form _a [10,10,710,460] {
     button  [-121,5,,] { title:'Uložit', help:'ukončit editor a uložit změny'
-      proc onclick() { form.save; ask('menu_upd_akce',2); panel.hide(1); }}
+      proc onclick() { form.save; panel.hide(1); }}
     button  [-75,5,,] { title:'Zpět', help:'ukončit editor bez uložení změn'
       proc onclick() { panel.hide(0); }}
     field [39,10,190,] { title:'menu:', data:akce.web_menu }
@@ -131,7 +131,7 @@ panel EDITOR [0,0,710,530] { title:' Úprava textu', type:'popup'
   # oprava textu buňky
   form _b [10,10,710,460] {
     button  [-121,5,,] { title:'Uložit', help:'ukončit editor a uložit změny'
-      proc onclick() { form.save; ask('menu_upd_bunka',2); panel.hide(1); }}
+      proc onclick() { form.save; panel.hide(1); }}
     button  [-75,5,,] { title:'Zpět', help:'ukončit editor bez uložení změn'
       proc onclick() { panel.hide(0); }}
     field [50,10,200,] { title:'menu:', data:cell.web_menu }
@@ -418,7 +418,7 @@ table na { key_id:'id_na' // lidi/akce
   number id_na
   number id_akce
   number id_lidi
-  text funkce 
+  number funkce 
   text poznamka
   date web_change { sql_pipe:'sql_date1', help:'změna|datum změny z webu' }
 }
@@ -426,7 +426,7 @@ table je { key_id:'id_je' // lidi/fara
   number id_je
   number id_fara
   number id_lidi
-  text funkce 
+  number funkce 
 }
 table ma { key_id:'id_ma' // lidi/cell
   number id_ma
@@ -439,7 +439,8 @@ table ve { key_id:'id_ve' // cell/fara
   number id_ve
   number id_fara
   number id_cell
-  text funkce 
+  text poznamka
+  number funkce 
 }
 table go { key_id:'id_go' // lidi/mail
   number id_go

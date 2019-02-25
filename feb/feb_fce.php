@@ -30,12 +30,13 @@ function feb_pack_menit_lidi_3($idp,$on,$kneze,$vedouci,$cleny) {
 function feb_pack_menit($idp,$on,$rl) {
   $difs= 0;
   while ( $rl && list($idl)= mysql_fetch_row($rl) ) {
-    $idg= select('id_go','go',"id_pack=$idp AND id_lidi=$idl");
+    list($idg,$stav)= select('id_go,stav','go',"id_pack=$idp AND id_lidi=$idl");
     if ( !$idg && $on ) {
       query("INSERT INTO go (id_pack,id_lidi,stav) VALUE ($idp,$idl,0)");
       $difs+= mysql_affected_rows();
     }
-    if ( $idg && !$on ) {
+    if ( $idg && !$on && $stav!=5 ) {
+      // odeber pouze ještě neodeslané maily
       query("DELETE FROM go WHERE id_go=$idg");
       $difs+= mysql_affected_rows();
     }
