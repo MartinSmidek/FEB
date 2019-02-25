@@ -465,7 +465,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
       proc onclick() { 
         deleted.set(1); deleted.change; form.save; b_lidi.lst.refresh
     }}
-    # ------------------------==> . kontextové_menu
+    // kontextové_menu
     menu m { type:'context'
       item { title:'ukázat změny', proc onclick () {
         form.key; track.back_show('lidi',form.key) } }
@@ -585,8 +585,8 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     button  [-67,-10,,] { tag:'e', title:"[fa-heart] nový",proc onclick() { do_novy(form,b_akce.lst) }}
     button  [-15,-10,,] { tag:'e', title:"[fa-times fa-red] zruš"
       proc onclick() { do_zrus(form,b_akce.lst)}}
-    # ------------------------==> . kontextové_menu
-    menu m { type:'context'
+    // kontextové_menu
+    menu { type:'context'
       item { title:'ukázat změny', proc onclick () {
         form.key; track.back_show('akce',form.key) } }
     }
@@ -699,6 +699,11 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     button  [-67,-10,,] { tag:'e', title:"[fa-heart] nový",proc onclick() { do_novy(form,b_fara.lst) }}
     button  [-15,-10,,] { tag:'e', title:"[fa-times fa-red] zruš"
       proc onclick() { do_zrus(form,b_fara.lst)}}
+    // kontextové_menu
+    menu { type:'context'
+      item { title:'ukázat změny', proc onclick () {
+        form.key; track.back_show('fara',form.key) } }
+    }
   }
   // ------------------------------------------------------------- PACK (mail)
   form _b_pack [,,1,1] { css:'work'
@@ -815,6 +820,11 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     button  [-67,-10,,] { tag:'e', title:"[fa-heart] nový" proc onclick() { do_novy(form,b_pack.lst) }}
     button  [-15,-10,,] { tag:'e', title:"[fa-times fa-red] zruš" 
       proc onclick() { do_zrus(form,b_pack.lst)}}
+    // kontextové_menu
+    menu { type:'context'
+      item { title:'ukázat změny', proc onclick () {
+        form.key; track.back_show('pack',form.key) } }
+    }
   }
   // ------------------------------------------------------------- CELL (buńka)
   form _b_cell [,,1,1] { css:'work'
@@ -924,6 +934,11 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     button [-125,-10,,] { tag:'s', title:"[fa-undo] zpět", proc onclick() { do_zpet(form,b_cell.lst) }}
     button  [-67,-10,,] { tag:'e', title:"[fa-heart] nový",proc onclick() { do_novy(form,b_cell.lst) }}
     button  [-15,-10,,] { tag:'e', title:"[fa-times fa-red] zruš",proc onclick() { do_zrus(form,b_cell.lst)}}
+    // kontextové_menu
+    menu { type:'context'
+      item { title:'ukázat změny', proc onclick () {
+        form.key; track.back_show('cell',form.key) } }
+    }
   }
   # ============================================================== RELACE
   // ------------------------------------------------------------- LIDI na AKCE
@@ -966,7 +981,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
       proc onclick() { Spoj }}
     button  [-15,-10,,] { tag:'d', title:"[fa-plug fa-rotate-180 fa-red] rozpoj"
       proc onclick() { Rozpoj }}
-    # ------------------------==> . kontextové_menu
+    // kontextové_menu
     menu m { type:'context'
       item { title:'ukázat změny', proc onclick () {
         form.key; track.back_show('na',form.key) } }
@@ -1018,6 +1033,11 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
       proc onclick() { Spoj }}
     button  [-15,-10,,] { tag:'d', title:"[fa-plug fa-rotate-180 fa-red] rozpoj", 
       proc onclick() { Rozpoj }}
+    // kontextové_menu
+    menu { type:'context'
+      item { title:'ukázat změny', proc onclick () {
+        form.key; track.back_show('je',form.key) } }
+    }
   }
   // ------------------------------------------------------------- LIDI go MAIL
   form _r_go [,,1,1] { css:'rel', style:'overflow:auto'
@@ -1054,6 +1074,11 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
       proc onclick() { Spoj }}
     button  [-15,-10,,] { tag:'d', title:"[fa-plug fa-rotate-180 fa-red] rozpoj", 
       proc onclick() { Rozpoj }}
+    // kontextové_menu
+    menu { type:'context'
+      item { title:'ukázat změny', proc onclick () {
+        form.key; track.back_show('go',form.key) } }
+    }
   }
   // ------------------------------------------------------------- LIDI ma CELL
   form _r_ma [,,1,1] { css:'rel', style:'overflow:auto'
@@ -1093,6 +1118,11 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
       proc onclick() { Spoj }}
     button  [-15,-10,,] { tag:'d', title:"[fa-plug fa-rotate-180 fa-red] rozpoj", 
       proc onclick() { Rozpoj }}
+    // kontextové_menu
+    menu { type:'context'
+      item { title:'ukázat změny', proc onclick () {
+        form.key; track.back_show('ma',form.key) } }
+    }
   }
   // ------------------------------------------------------------- CELL ve FARA
   form _r_ve [,,1,1] { css:'rel', style:'overflow:auto'
@@ -1127,6 +1157,11 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
       proc onclick() { eq(mode.get,cell_fara.get); spoj(12) | spoj(21) }}
     button  [-15,-10,,] { tag:'d', title:"[fa-plug fa-rotate-180 fa-red] rozpoj"
       proc onclick() { rozpoj }}
+    // kontextové_menu
+    menu { type:'context'
+      item { title:'ukázat změny', proc onclick () {
+        form.key; track.back_show('ve',form.key) } }
+    }
   }
   // ------------------------------------------------------------- NOTE pro dulicity
   form _xr_note [,,1,1] { css:'rel', style:'overflow:auto'
