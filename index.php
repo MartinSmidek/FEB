@@ -7,18 +7,12 @@
 //    . "<br><br><br><br>");
 
 $cms= 'man';
-$ezer_local= $_SERVER['SERVER_NAME']=='feb.bean' ? 1 : 0;
-$index= $ezer_local ? "index.php" : "index.php";
-//if ( !$ezer_local ) {
-//  // pro ostrý server vnuť HTTPS
-//  list($http)= isset($_SERVER["HTTP_REFERER"]) 
-//      ? explode('://',$_SERVER["HTTP_REFERER"]) : array('http');
-//  if ( $http=='http' ) {
-//    $url= "https://". $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI'];
-//    header("Location: $url");
-//    exit;
-//  }  
-//}
+$index= "index.php";
+// hostující servery
+$ezer_server= 
+    $_SERVER["SERVER_NAME"]=='feb.bean'    ? 0 : (                      // 0:lokální 
+    $_SERVER["SERVER_NAME"]=='evangelizacnibunky.cz'     ? 1 : (        // 1:endora
+    $_SERVER["SERVER_NAME"]=='www.evangelizacnibunky.cz' ? 1 :  -1));   // 1:endora
 
 # ------------------------------------------ init
 
@@ -54,7 +48,9 @@ if ( isset($TEST) || count($_POST) ) {
     $ok= ask_server($y);
   }
   header('Content-type: application/json; charset=UTF-8');
+//  $y->try= 1;
   $yjson= json_encode($y);
+//  $yjson= "ach jo";
   echo $yjson;
   exit;
 }
@@ -78,7 +74,7 @@ $fe_level= isset($_SESSION['web']['fe_level']) ? $_SESSION['web']['fe_level'] : 
 //  $be_user= 0;
 //  $fe_host= 0;
 //  $fe_user_display= isset($_GET['login']) ? 'block' : 'none';
-  $ezer_local= preg_match('/^\w+\.bean/',$_SERVER["SERVER_NAME"]);
+//  $ezer_local= preg_match('/^\w+\.bean/',$_SERVER["SERVER_NAME"]);
 
   // pamatování GET
 //  $GET_rok= isset($_GET['rok']) ? $_GET['rok'] : '';

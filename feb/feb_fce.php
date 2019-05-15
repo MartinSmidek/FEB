@@ -116,8 +116,8 @@ function feb_pack_send($idp,$kolik,$from,$fromname,$test='',$idl=0,$foot='') {
           $mail->AddCC($adresa);
       }
       // zkus poslat mail
-//      try { $ok= $mail->Send(); } catch(Exception $e) { $ok= false; $msg= $e; }
-      $ok= 1; display("mail.Send()");
+      try { $ok= $mail->Send(); } catch(Exception $e) { $ok= false; $msg= $e; }
+//      $ok= 1; display("mail.Send()");
       if ( !$ok  ) {
         $err= $mail->ErrorInfo;
         $y->_html.= "<br><b style='color:#700'>Při odesílání mailu pro $idl došlo k chybě: $err</b>";

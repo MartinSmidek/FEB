@@ -1039,7 +1039,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
         form.key; track.back_show('je',form.key) } }
     }
   }
-  // ------------------------------------------------------------- LIDI go MAIL
+  // ------------------------------------------------------------- LIDI go PACK (mail)
   form _r_go [,,1,1] { css:'rel', style:'overflow:auto'
     // public procedury a proměnné
     proc Init() { 
@@ -1068,7 +1068,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     proc onchanged() { on_chng(form); }
     // operace
     label [-10,-5,239,30] { css:'parm' }
-    button [-194,-10,,] { tag:'s', title:"[fa-save] ulož", proc onclick() { do_zmen }}
+    button [-194,-10,,] { tag:'s', title:"[fa-save] ulož", proc onclick() { do_zmen; LL.lst.browse_refresh }}
     button [-138,-10,,] { tag:'s', title:"[fa-undo] zpět", proc onclick() { do_vrat }}
     button  [-82,-10,,] { tag:'j', title:"[fa-plug fa-rotate-180] spoj", 
       proc onclick() { Spoj }}
@@ -1328,12 +1328,13 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
       button send [195,111,,] { title:'xx ještě neposlaných'
         help:'pošle další dávku - počet lze měnit políčkem vlevo'
         proc onclick () { var foot:text, y:object
-//          msg.set(''); foot.set('');
-//          confirm(conc('Opravdu poslat dalších ',davka.get,' mailů "z adresy" ',from.get,'?'));
-//          [ foo.get; foot.set(sys('user','options','email_foot')) ]; 
-//          y.set(ask('feb_pack_send',f_pack.key,davka.get,from.get,name.get,0,0,foot.get));
-//          msg.set(y.get._html);
-//          maily.browse_seek; texty.browse_seek;
+          msg.set(''); foot.set('');
+          confirm(conc('Opravdu poslat dalších ',davka.get,' mailů "z adresy" ',from.get,'?'));
+          [ foo.get; foot.set(sys('user','options','email_foot')) ]; 
+          y.set(ask('feb_pack_send',f_pack.key,davka.get,from.get,name.get,0,0,foot.get));
+          msg.set(y._html);
+          LL.lst.browse_refresh; 
+          [ RR.get; RR.lst.browse_refresh ];
         }
       }
       label msg [0,150,400,50] { style:"overflow:auto;border-top:1px solid green;padding:5px" }

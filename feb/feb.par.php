@@ -6,7 +6,7 @@
   
   $EZER= (object)array(
       // inicializace objektu EZER pro aplikace FEB
-      'version'=>$_SESSION['feb']['ezer'],
+      'version'=>'ezer'.$_SESSION['feb']['ezer'],
       'options'=>(object)array(),
       'activity'=>(object)array(),
       'CMS'=>(object)array(
@@ -54,7 +54,7 @@
                   mailové adresy {PIN} a použijte tlačítko <b>Potvrdit PIN</b>.
                   <br>Pokud se jedná o omyl, pak prosím tento mail ignorujte.",
               'CMS_mail_1'  => 
-                  "Byl vám poslán mail s PINem ...",
+                  "Byl vám poslán mail s PINem. Opište prosím doručený PIN do formuláře.",
               'CMS_pin_1'  => 
                   "Děkujeme za potvrzení PINu, nyní prosím zkontrolujte případně opravte
                    nebo doplňte vaše osobní údaje.",
@@ -75,11 +75,17 @@
               'CMS_submit_4'  => 
                   "Vaše údaje byly zapsány, Vaše přihláška již byla dříve evidována.",
               'CMS_submit_5'  => 
-                  "Vaše údaje byly zapsány, Vaši přihlášku jsme vzali na vědomí.",
-              'CMS_submit_error_1'  => 
-                  "Na tento seminář už jste přihlášen.",
+                  "Vaše přihláška na akci byla zaevidována a byl Vám poslán potvrzující mail.",
+              'CMS_submit_error_2'  => 
+                  "Při zpracování opravených údajů bohužel došlo k chybě (2).",
+              'CMS_submit_error_4'  => 
+                  "Při zpracování vkládaných údajů bohužel došlo k chybě (4).",
+              'CMS_submit_error_3'  => 
+                  "Při zpracování přihlášky bohužel došlo k chybě (3).",
               'cms_submit_missing'  => 
                   "<span class='problem'>Vyplňte prosím správně chybějící položky.</span>",
+              'cms_submit_bad_date'  => 
+                  "<span class='problem'>Zadejte prosím datum ve tvaru den.měsíc.rok (d.m.rrrr)</span>",
               'cms_error'=>
                   "Při zpracování formuláře došlo bohužel k chybě, selhalo spojení se serverem" ,
               'cms_send_mail_error'=>
@@ -88,8 +94,8 @@
                   "Online přihlášení lze použít pouze z prohlížečů Chrome, Firefox, Edge" 
             ),
             'ELEM'=>array(
-              'Ojmeno'    => array('t','*','jméno',190), 
-              'Oprijmeni' => array('t','*','příjmení',160),
+              'Ojmeno'    => array('t','+','jméno',190), 
+              'Oprijmeni' => array('t','+','příjmení',160),
               'Onarozeni' => array('d','-','narození',68),
               'Oulice'    => array('t','*','ulice',177), 
               'Opsc'      => array('t','*','psč',82), 
@@ -110,7 +116,7 @@
               ''=>''
             ),
             'CALL'=>array(
-              'sendmail_OA'=> "cms_send_potvrzeni"       // parametry IDO,IDA
+              'sendmail_OA'=> "cms_send_potvrzeni"       // parametry mail,IDO,IDA
             )
           ),
           // přihlášení do CMS
@@ -128,19 +134,21 @@
   $tracked= $mysql_tracked= ",lidi,fara,cell,akce,pack,na,ma,je,ve,go,_user,";
   $db= array('feb','feb');
   $dbs= array(
-    array(  // ostré
+    array(  // lokální
+      'feb'           => array(0,'localhost','gandi','','utf8'),
+      'ezer_system'   => array(0,'localhost','gandi','','utf8','feb'),
+      'ezer_kernel'   => array(0,'localhost','gandi','','utf8')
+    ),
+    array(  // evangelizacnibunky.cz
       'feb'           => array(0,'localhost','gandi','radost','utf8'),
       'ezer_system'   => array(0,'localhost','gandi','radost','utf8','feb'),
       'ezer_kernel'   => array(0,'localhost','gandi','radost','utf8','feb')
-      ),
-    array(  // lokální
-      'feb'           => array(0,'localhost','gandi','','utf8'),
-      'ezer_system'   => array(0,'localhost','gandi','','utf8','feb')),
-      'ezer_kernel'   => array(0,'localhost','gandi','','utf8')
+    )
   );
   
-  $ezer_db= $dbs[$ezer_local];
-  $mysql_db= $db[$ezer_local];
+  global $ezer_server, $ezer_db, $mysql_db;
+  $ezer_db= $dbs[$ezer_server];
+  $mysql_db= $db[$ezer_server];
   /// \endcond
 
 ?>

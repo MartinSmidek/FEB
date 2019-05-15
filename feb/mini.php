@@ -73,8 +73,11 @@ function debug($x,$label=false,$options=null) {
   }
   else {
 //    $x= mysql_real_escape_string(var_export($x,true));
-    $x= str_replace("'",'"',var_export($x,true));
-    $trace.= "<script>console.log( \"" . str_replace("\n",'\n',$x) . "\" );</script>";
+    $x= str_replace('"',"'",var_export($x,true));
+    $x= str_replace("\n",'\n',$x);
+    $stack= debug_backtrace();
+    $line= str_pad($stack[0]['line'],4,' ',STR_PAD_LEFT);
+    $trace.= "<script>console.log( \":  debug/$line: $x\" );</script>";
   }
 }
 # -------------------------------------------------------------------------------------------- debug
@@ -312,92 +315,92 @@ function mysql_err($qry) {
   $y->ok= 'ko';
   fce_error($msg);
 }
-# ---------------------------------------------------------------------------------------- mysql_qry
-# provedení dotazu a textu v $y->qry="..." a případně doplnění $y->err
-#   $qry      -- SQL dotaz
-#   $pocet    -- pokud je uvedeno, testuje se a při nedodržení se ohlásí chyba
-#   $err      -- text chybové hlášky, která se použije místo standardní ... pokud končí znakem':'
-#                bude za ni doplněna standardní chybová hláška;
-#                pokud $err=='-' nebude generována chyba a funkce vrátí false
-#   $to_throw -- chyba způsobí výjimku
-#   $db       -- před dotazem je přepnuto na databázi daného jména v tabulce $ezer_db nebo na hlavní
-function mysql_qry($qry,$pocet=null,$err=null,$to_throw=false,$db='') {
-  global $trace, $y, $totrace, $qry_del, $qry_count, $ezer_db;
-  if ( !isset($y) ) $y= (object)array();
-  $msg= ''; $abbr= '';
-  $qry_count++;
-  $myqry= str_replace('"',"U",$qry);
-//                                                         display($myqry);
-  // dotaz s měřením času
-  $time_start= getmicrotime();
-  // přepnutí na databázi
-  if ( $db ) ezer_connect($db);
-  $res= @mysql_query($qry);
-  $time= round(getmicrotime() - $time_start,4);
-  $ok= $res ? 'ok' : '--';
-  if ( !$res ) {
-    if ( $err=='-' ) goto end;
-    $merr= mysql_error();
-    $serr= "You have an error in your SQL";
-    if ( $merr && substr($merr,0,strlen($serr))==$serr ) {
-      $msg.= "SQL error ".substr($merr,strlen($serr))." in:$qry";
-      $abbr= '/S';
-    }
-    else {
-      $myerr= $merr;
-      if ( $err ) {
-        $myerr= $err;
-        if ( substr($err,-1,1)==':' )
-          $myerr.= $merr;
-      }
-//       $myerr= str_replace('"',"U",$myerr);
-      $msg.= "\"$myerr\" \nQRY:$qry";
-      $abbr= '/E';
-    }
-    $y->ok= 'ko';
-  }
-  // pokud byl specifikován očekávaný počet, proveď kontrolu
-  else if ( $pocet  ) {
-    if ( substr($qry,0,6)=='SELECT' )
-      $num= mysql_num_rows($res);
-    elseif ( in_array(substr($qry,0,6),array('INSERT','UPDATE','REPLAC','DELETE')) )
-      $num= mysql_affected_rows(); // INSERT, UPDATE, REPLACE or DELETE
-    else
-      fce_error("mysql_qry: neznámá operace v $qry");
-    if ( $pocet!=$num ) {
-      if ( $num==0 ) {
-        $msg.= "nenalezen záznam " . ($err ? ", $err" : ""). " v $qry";
-        $abbr= '/0';
-      }
-      else {
-        $msg.= "vraceno $num zaznamu misto $pocet" . ($err ? ", $err" : ""). " v $qry";
-        $annr= "/$num";
-      }
-      $y->ok= 'ko';
-      $ok= "ko [$num]";
-      $res= null;
-    }
-  }
-  if ( strpos($totrace,'M')!==false ) {
-    global $CMS;
-    if ( $CMS ) {
-      $qry= (isset($y->qry)?"\n":'')."$ok $time \"$myqry\" ";
-      $trace.= "SQL: $qry<br>";
-    }
-    else {
-      $qry= mysql_real_escape_string((isset($y->qry)?"\n":'')."$ok $time \"$myqry\" ");
-      $trace.= "<script>console.log( \"SQL: $qry \");</script>";
-    }
-  }
-  $y->qry_ms= isset($y->qry_ms) ? $y->qry_ms+$time : $time;
-  $qry_del= "\n: ";
-  if ( $msg ) {
-    if ( $to_throw ) throw new Exception($err ? "$err$abbr" : $msg);
-    else fce_error((isset($y->error) ? $y->error : '').$msg);
-  }
-end:
-  return $res;
-}
+//# ---------------------------------------------------------------------------------------- mysql_qry
+//# provedení dotazu a textu v $y->qry="..." a případně doplnění $y->err
+//#   $qry      -- SQL dotaz
+//#   $pocet    -- pokud je uvedeno, testuje se a při nedodržení se ohlásí chyba
+//#   $err      -- text chybové hlášky, která se použije místo standardní ... pokud končí znakem':'
+//#                bude za ni doplněna standardní chybová hláška;
+//#                pokud $err=='-' nebude generována chyba a funkce vrátí false
+//#   $to_throw -- chyba způsobí výjimku
+//#   $db       -- před dotazem je přepnuto na databázi daného jména v tabulce $ezer_db nebo na hlavní
+//function mysql_qry($qry,$pocet=null,$err=null,$to_throw=false,$db='') {
+//  global $trace, $y, $totrace, $qry_del, $qry_count, $ezer_db;
+//  if ( !isset($y) ) $y= (object)array();
+//  $msg= ''; $abbr= '';
+//  $qry_count++;
+//  $myqry= str_replace('"',"U",$qry);
+////                                                         display($myqry);
+//  // dotaz s měřením času
+//  $time_start= getmicrotime();
+//  // přepnutí na databázi
+//  if ( $db ) ezer_connect($db);
+//  $res= @mysql_query($qry);
+//  $time= round(getmicrotime() - $time_start,4);
+//  $ok= $res ? 'ok' : '--';
+//  if ( !$res ) {
+//    if ( $err=='-' ) goto end;
+//    $merr= mysql_error();
+//    $serr= "You have an error in your SQL";
+//    if ( $merr && substr($merr,0,strlen($serr))==$serr ) {
+//      $msg.= "SQL error ".substr($merr,strlen($serr))." in:$qry";
+//      $abbr= '/S';
+//    }
+//    else {
+//      $myerr= $merr;
+//      if ( $err ) {
+//        $myerr= $err;
+//        if ( substr($err,-1,1)==':' )
+//          $myerr.= $merr;
+//      }
+////       $myerr= str_replace('"',"U",$myerr);
+//      $msg.= "\"$myerr\" \nQRY:$qry";
+//      $abbr= '/E';
+//    }
+//    $y->ok= 'ko';
+//  }
+//  // pokud byl specifikován očekávaný počet, proveď kontrolu
+//  else if ( $pocet  ) {
+//    if ( substr($qry,0,6)=='SELECT' )
+//      $num= mysql_num_rows($res);
+//    elseif ( in_array(substr($qry,0,6),array('INSERT','UPDATE','REPLAC','DELETE')) )
+//      $num= mysql_affected_rows(); // INSERT, UPDATE, REPLACE or DELETE
+//    else
+//      fce_error("mysql_qry: neznámá operace v $qry");
+//    if ( $pocet!=$num ) {
+//      if ( $num==0 ) {
+//        $msg.= "nenalezen záznam " . ($err ? ", $err" : ""). " v $qry";
+//        $abbr= '/0';
+//      }
+//      else {
+//        $msg.= "vraceno $num zaznamu misto $pocet" . ($err ? ", $err" : ""). " v $qry";
+//        $annr= "/$num";
+//      }
+//      $y->ok= 'ko';
+//      $ok= "ko [$num]";
+//      $res= null;
+//    }
+//  }
+//  if ( strpos($totrace,'M')!==false ) {
+//    global $CMS;
+//    if ( $CMS ) {
+//      $qry= (isset($y->qry)?"\n":'')."$ok $time \"$myqry\" ";
+//      $trace.= "SQL: $qry<br>";
+//    }
+//    else {
+//      $qry= mysql_real_escape_string((isset($y->qry)?"\n":'')."$ok $time \"$myqry\" ");
+//      $trace.= "<script>console.log( \"SQL: $qry \");</script>";
+//    }
+//  }
+//  $y->qry_ms= isset($y->qry_ms) ? $y->qry_ms+$time : $time;
+//  $qry_del= "\n: ";
+//  if ( $msg ) {
+//    if ( $to_throw ) throw new Exception($err ? "$err$abbr" : $msg);
+//    else fce_error((isset($y->error) ? $y->error : '').$msg);
+//  }
+//end:
+//  return $res;
+//}
 # ------------------------------------------------------------------------------------------- select
 # navrácení hodnoty jednoduchého dotazu
 # pokud $expr obsahuje čárku, vrací pole hodnot, pokud $expr je hvězdička vrací objekt
@@ -525,7 +528,7 @@ function sql_date ($datum,$user2sql=0) {
   }
   return $text;
 }
-# -------------------------------------------------------------------------------------------------- ezer_qry
+# ----------------------------------------------------------------------------------------- ezer_qry
 # záznam změn do tabulky _track
 # 1. ezer_qry("INSERT",$table,$x->key,$zmeny[,$key_id]);       -- vložení 1 záznamu
 # 2. ezer_qry("UPDATE",$table,$x->key,$zmeny[,$key_id]);       -- oprava 1 záznamu

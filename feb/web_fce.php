@@ -27,12 +27,15 @@ function page($ref,$full_page,$level=0) {
 // napojí databázi
 function connect() { 
   global $ezer_db, $web_db;
-  // connect
   $web_db= "feb";
-  $ezer_local= preg_match('/^.*\.(bean)$/',$_SERVER["SERVER_NAME"]);
+  // hostující servery
+  $ezer_server= 
+    $_SERVER["SERVER_NAME"]=='feb.bean'    ? 0 : (                      // 0:lokální 
+    $_SERVER["SERVER_NAME"]=='evangelizacnibunky.cz'     ? 1 : (        // 1:endora
+    $_SERVER["SERVER_NAME"]=='www.evangelizacnibunky.cz' ? 1 :  -1));   // 1:endora
   $hst1= 'localhost';
-  $nam1= $ezer_local ? 'gandi'    : 'gandi';
-  $pas1= $ezer_local ? ''         : 'radost';
+  $nam1= $ezer_server ? 'gandi'    : 'gandi';
+  $pas1= $ezer_server ? 'radost'   : '';
   $ezer_db= array( /* lokální */
     $web_db  =>  array(0,$hst1,$nam1,$pas1,'utf8'),
   );
@@ -46,15 +49,6 @@ function read_menu($level=0) {
   // výpočet fe_level podle záznamu v ezer_db2.osoba.web_level a 
   $fe_level= $level + ($CMS ? 16 : 0);
   connect();
-//  $web_db= "feb";
-//  $ezer_local= preg_match('/^.*\.(bean)$/',$_SERVER["SERVER_NAME"]);
-//  $hst1= 'localhost';
-//  $nam1= $ezer_local ? 'gandi'    : 'gandi';
-//  $pas1= $ezer_local ? ''         : 'radost';
-//  $ezer_db= array( /* lokální */
-//    $web_db  =>  array(0,$hst1,$nam1,$pas1,'utf8'),
-//  );
-//  ezer_connect('feb');
   // načtení menu
   $menu= array();
   $mn= mysql_qry("SELECT * FROM menu WHERE wid=2 AND typ>=0 ORDER BY typ,rank");
@@ -72,18 +66,10 @@ function read_menu($level=0) {
 # -------------------------------------------------------------------------------------==> eval_menu
 # path = [ mid, ...]
 function eval_menu($path) { 
-  global $CMS, $currpage, $tm_active, $ezer_local, $index;
+  global $CMS, $currpage, $tm_active, $ezer_server, $index;
   global $menu, $topmenu, $mainmenu, $elem, $backref, $top;
   $index= "index.php";
-//  $prefix= $ezer_local
-//      ? "http://feb.bean:8080/$index?page="
-//      : "http://feb.ezer.cz/$index?page=";
-//  $prefix= $ezer_local
-//      ? "http://feb.bean:8080/"
-//      : "http://feb.ezer.cz/";
-  $prefix= $ezer_local
-      ? "http://feb.bean:8080/"
-      : "https://evangelizacnibunky.cz/";
+  $prefix= array("http://feb.bean:8080/","https://evangelizacnibunky.cz/")[$ezer_server];
   // pokud má menu M submenu S tak bude prvkem vnořené pole - první ještě patří do mainmenu
   $topmenu= $mainmenu= array();
   $currpage= implode('!',$path);
@@ -173,7 +159,7 @@ function eval_menu($path) {
 // desc :: key [ = ids ]
 // ids  :: id1 [ / id2 ] , ...    -- id2 je klíč v lokální db pro ladění
 function eval_elem($desc) {
-  global $CMS, $ezer_local, $load_ezer;
+  global $CMS, $ezer_server, $load_ezer;
   global $edit_entity, $edit_id;
   $edit_entity= '';
   $edit_id= 0;
@@ -188,7 +174,7 @@ function eval_elem($desc) {
       $id= array();
       foreach (explode(',',$ids) as $id12) {
         list($id_server,$id_local)= explode('/',$id12);
-        $id[]= $id_local ? ($ezer_local ? $id_local : $id_server) : $id_server; 
+        $id[]= $id_local ? (!$ezer_server ? $id_local : $id_server) : $id_server; 
       }
       $id= implode(',',$id);
     }
@@ -603,16 +589,16 @@ end:
 # funkce pro online přihlášky
 # ------------------------------------------------------------------------------- cms send_potvrzeni
 # pošle potvrzení o přijetí přihlášky
-function cms_send_potvrzeni($idl,$ida) {
+function cms_send_potvrzeni($email,$idl,$ida) {
   $nazev= select('nazev','akce',"id_akce=$ida");
-  $mail= select('mail','lidi',"id_lidi=$idl");
+//  $email= select('mail','lidi',"id_lidi=$idl");
   $reply= "evangelizacnibunky@seznam.cz";
   $subj= "Potvrzení přijetí přihlášky na  $nazev";
   $body= "Dobrý den, potvrzujeme vaši přihlášku na seminář. 
     <br>Bližší info vám zašleme dva týdny předem.
     <br><br>Přeji vám hezký den.
     <br>sr. Alžběta, mail: <a href='mailto:$reply'>$reply</a>";
-  $ok= cms_mail_send($mail,$subj,$body,$reply);
+  $ok= cms_mail_send($email,$subj,$body,$reply);
   return $ok;    
 }
 ?>
