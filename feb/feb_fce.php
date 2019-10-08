@@ -219,17 +219,17 @@ function feb_sestava_lidi($par,$export=false) {
   $typ= $par->typ;
   $tit= $par->tit;   
   $fld= $par->fld;
-  $select_fld= substr(strtr(",$fld",array(',_vek'=>'',',_n'=>'')),1);
-  $cnd= $par->cnd;
-  $ids= $par->ids;
+  $select_fld= substr(strtr(",$fld",array(',_vek'=>'',',_n'=>'')),1); // věk se bude počítat
+  $cnd= isset($par->cnd) ? $par->cnd : false;
+  $ids= isset($par->ids) ? $par->ids : false;
 //  $hav= $par->hav ? "HAVING {$par->hav}" : '';
   $ord= $par->ord ? $par->ord : "prijmeni,jmeno";
   $n= 0;
   // kontrola a dekódování parametrů
   $tits= explode(',',$tit);
   $flds= explode(',',$fld);
-  if ( isset($par->ids) && !$ids ) {
-    $html= "... je třeba vybrat řádky klávesou Insert"; goto end;
+  if ( $typ=='lidi' && $ids===false ) {
+    $html= "... lidi je třeba vybrat řádky klávesou Insert"; goto end;
   }
   // číselníky
   $stat= map_cis('stat','hodnota');  $stat[0]= '';
@@ -237,12 +237,14 @@ function feb_sestava_lidi($par,$export=false) {
   $clmn= array();
 //  $expr= array();       // pro výrazy
   $qry= $typ=='lidi' 
-      ? "SELECT $select_fld FROM lidi WHERE id_lidi IN ($par->ids) ORDER BY $ord" : (
-        $typ=='akce-lidi' 
+      ? "SELECT $select_fld FROM lidi 
+         WHERE deleted=0 AND id_lidi IN ($par->ids) ORDER BY $ord" : (
+      $typ=='akce-lidi' 
       ? "SELECT $select_fld FROM akce 
          JOIN na USING (id_akce)
          JOIN lidi USING (id_lidi)
-         WHERE $cnd
+         WHERE deleted=0 AND $cnd
+         GROUP BY id_lidi         
          ORDER BY $ord " : ''
   );
   $res= mysql_qry($qry);

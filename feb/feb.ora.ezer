@@ -359,20 +359,27 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
           css_cell:"wch,1:right,2:middle,3:oranzovy,4:zluty,5:zeleny,6:cerveny" }
       show obec [,,65,] { title:'obec', data:l.obec, format:'sq*' 
           css_cell:"opravit,1:zluty" }
+      proc onchange() {
+        this.browse_count | M.Init(); f_lidi.Init
+      }
       proc onrowclick() { 
         point(conc('lidi rowclick id_lidi=',lst.browse_key));
         f_lidi.Load(idl.get);
         M.Init();
+        ctx.i_na.enable(0);
         switch(mode.get,
           lidi_akce.get, /* na */ { 
+            f_akce.Init;
             RR.n.set_attrib('join',conc("ON n.id_akce=a.id_akce AND n.id_lidi=",idl.get));
             [ RR.lst.browse_select(conc('id_lidi=',idl.get),1) ];
             RR.lst.browse_refresh;
           },
           akce_lidi.get, /* na */ { 
             r_na.Load;
+            ctx.i_na.enable(1);
           },
           lidi_cell.get, /* ma */ { 
+            f_cell.Init;
             RR.m.set_attrib('join',conc("ON m.id_cell=c.id_cell AND m.id_lidi=",idl.get)); 
             [ RR.lst.browse_select(conc('id_lidi=',idl.get),1) ];
             RR.lst.browse_refresh;
@@ -381,6 +388,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
             r_ma.Load;
           },
           lidi_fara.get, /* je */ { 
+            f_fara.Init;
             RR.j.set_attrib('join',conc("ON j.id_fara=f.id_fara AND j.id_lidi=",idl.get)); 
             RR.lst.set_attrib('optimize.ignore','idv,idc');
             [ RR.lst.browse_select(conc('id_lidi=',idl.get),1) ];
@@ -390,6 +398,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
             r_je.Load;
           },
           lidi_pack.get, /* go */ { 
+            f_pack.Init;
             RR.g.set_attrib('join',conc("ON g.id_pack=p.id_pack AND g.id_lidi=",idl.get));
             [ RR.lst.browse_select(conc('id_lidi=',idl.get),1) ];
             RR.lst.browse_refresh;
@@ -409,7 +418,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
       | eq(on,0); M.Rozpoj()
       | eq(on,1); M.Spoj() 
       }
-      menu { type:'context'
+      menu ctx { type:'context'
         item { title:'přehled a export vybraných',
           proc onclick () { 
             TISK.do(object(
@@ -418,6 +427,16 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
               'ids',lst.selected('get'),
               'tit','příjmení:15,jméno:12,věk:5,narození:12:d,ulice:25,psč:7,obec:25,stát:10',
               'fld','prijmeni,jmeno,_vek,narozeni,ulice,psc,obec,stat'
+            ));
+        }}
+        item i_na { tag:'m' title:'přehled a export lidí na akci',
+          proc onclick () { 
+            TISK.do(object(
+              'typ','akce-lidi',
+              'hdr',"Lidé na akci",
+              'cnd',conc('id_akce=',LL.lst.ida.get),      
+              'tit','příjmení:15,jméno:12,věk:5,narození:12:d,ulice:25,psč:7,obec:25,stát:10,poznámka:50',
+              'fld','prijmeni,jmeno,_vek,narozeni,ulice,psc,obec,stat,poznamka'
             ));
         }}
       }
@@ -507,6 +526,9 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
       show nazev [,,85,] { title:'název', data:a.nazev, format:'tsq*', 
           css_cell:"web,1:zluty,2:zeleny" }
       show zacatek [,,65,] { title:'začátek', data:a.zacatek, format:'rs-q*' }
+      proc onchange() {
+        this.browse_count | M.Init(); f_akce.Init
+      }
       proc onrowclick() { 
         point(conc('akce rowclick id_akce=',lst.browse_key));
         f_akce.Load(ida.get);
@@ -516,6 +538,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
             r_na.Load;
           },
           akce_lidi.get, /* < na < */ { 
+            f_lidi.Init;
             b_lidi.n.set_attrib('join',conc("ON l.id_lidi=n.id_lidi AND n.id_akce=",ida.get)); 
             b_lidi.lst.browse_select(conc('n.id_akce=',ida.get),1);
             b_lidi.lst.browse_refresh;
@@ -626,6 +649,9 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
       show idc { data:v.id_cell }
       show nazev [,,85,] { title:'název', data:f.nazev, format:'ts+q*' }
       show obec [,,65,] { title:'obec', data:f.obec, format:'tsq*' }
+      proc onchange() {
+        this.browse_count | M.Init(); f_fara.Init
+      }
       proc onrowclick() { 
         point(conc('fara rowclick id_fara=',lst.browse_key));
         f_fara.Load(idf.get);
@@ -635,6 +661,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
             r_je.Load;
           },
           fara_lidi.get, /* je */ {
+            f_lidi.Init;
             b_lidi.j.set_attrib('join',conc("ON l.id_lidi=j.id_lidi AND j.id_fara=",idf.get)); 
             b_lidi.lst.browse_select(conc('j.id_fara=',idf.get),1);
             b_lidi.lst.browse_refresh;
@@ -643,6 +670,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
             r_ve.Load;
           },
           fara_cell.get, /* ve */ {
+            f_cell.Init;
             b_cell.v.set_attrib('join',conc("ON c.id_cell=v.id_cell AND v.id_fara=",idf.get)); 
             b_cell.lst.browse_select(conc('v.id_fara=',idf.get),1);
             b_cell.lst.browse_refresh;
@@ -737,6 +765,9 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
           css_cell:"wgo1,4:zluty,5:zeleny,6:cerveny" }
       show pack_date [,,65,] { title:'začátek', data:p.pack_date, format:'rs-q*' 
           css_cell:"wgo2,4:zluty,5:zeleny,6:cerveny" }
+      proc onchange() {
+        this.browse_count | M.Init(); f_pack.Init
+      }
       proc onrowclick() { 
         point(conc('pack rowclick id_pack=',lst.browse_key));
         f_pack.Load(idp.get);
@@ -746,6 +777,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
             r_go.Load;
           },
           pack_lidi.get, /* < go < */ { 
+            f_lidi.Init;
             b_lidi.g.set_attrib('join',conc("ON l.id_lidi=g.id_lidi AND g.id_pack=",idp.get));
             b_lidi.lst.browse_select(conc('g.id_pack=',idp.get),1);
             b_lidi.lst.browse_refresh;
@@ -862,6 +894,9 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
       show nazev [,,85,] { title:'název', data:c.nazev, format:'ts+q*' 
           css_cell:"web,1:zluty,2:zeleny" }
       show stav [,,65,] { title:'stav', data:c.stav, format:'tsq*' }
+      proc onchange() {
+        this.browse_count | M.Init(); f_cell.Init
+      }
       proc onrowclick() { 
         point(conc('cell rowclick id_cell=',lst.browse_key));
         f_cell.Load(idc.get);
@@ -871,6 +906,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
             r_ma.Load;
           },
           cell_lidi.get, /* ma */ {
+            f_lidi.Init;
             b_lidi.m.set_attrib('join',conc("ON l.id_lidi=m.id_lidi AND m.id_cell=",idc.get)); 
             b_lidi.lst.browse_select(conc('m.id_cell=',idc.get),1);
             b_lidi.lst.browse_refresh;
@@ -879,6 +915,7 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
             r_ve.Load;
           },
           cell_fara.get, /* ve */ {
+            f_fara.Init;
             b_fara.v.set_attrib('join',conc("ON f.id_fara=v.id_fara AND v.id_cell=",idc.get)); 
             b_fara.lst.browse_select(conc('v.id_cell=',idc.get),1);
             b_fara.lst.browse_refresh;
@@ -1215,8 +1252,14 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
       select vyber_adr [0,12,300,] { title:'^výběr adresátů' format:'t'
         proc onchanged() { 
           switch(this.key,
-            1,{ form.display(2,'a'); koho.set('účastníky'); tab.set('akce'); rel.set('na'); },
-            2,{ form.display(2,'m'); koho.set('adresáty'); tab.set('pack'); rel.set('go'); },
+            1,{ form.display(2,'a'); koho.set('účastníky'); 
+                tab.set('akce'); rel.set('na'); 
+                id_tab.set(akce.ida.get);
+              },
+            2,{ form.display(2,'m'); koho.set('adresáty'); 
+                tab.set('pack'); rel.set('go'); 
+                id_tab.set(maily.idp.get);
+              },
             3,{ form.display(2,'v'); koho.set('vybrané'); }
           );
           pridat.set(conc("<i class='fa fa-plus'></i> přidat ",koho.get));
