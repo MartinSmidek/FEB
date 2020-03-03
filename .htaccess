@@ -1,0 +1,8 @@
+RewriteEngine on
+#Options -Indexes
+RewriteBase /
+RewriteRule ^(feb\.php.*|.*\.js)$ $1 [QSA,L,NC]
+RewriteRule ^$ index.php?page=aktuality [QSA,L]
+RewriteRule ^([\w-]*)$ index.php?page=$1 [QSA,L]
+RewriteRule ^([\w-]*)/([\w_-]*)$ index.php?page=$1!$2 [QSA,L]
+#RewriteRule ^(.*)$ $1 [QSA,L]

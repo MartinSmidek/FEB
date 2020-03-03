@@ -90,7 +90,7 @@ function eval_menu($path) {
     }
     $href= $m->ref;
     $jmp= $CMS 
-      ? "onclick=\"go(arguments[0],'page=$href','{$prefix}$href','$input',0);\""
+      ? "onclick=\"go(arguments[0],'page=$href','{$prefix}$href','$input',0,'$m->event');\""
       : "href='{$prefix}$href'";
     switch ( (int)$m->typ ) {
 //    case 0:                             // zobrazení top menu
@@ -120,7 +120,7 @@ function eval_menu($path) {
         $active= $m->has_subs ? ' active subs' : ' active';
         $elem= $m->elem;
         $backref= $CMS 
-          ? "onclick=\"go(arguments[0],'page=$href!*','{$prefix}$href!*','$input',0);\""
+          ? "onclick=\"go(arguments[0],'page=$href!*','{$prefix}$href!*','$input',0,'$m->event');\""
 //          : "href='{$prefix}$href!*'";
           : "href='{$prefix}$href'";
         $top= array_shift($path);
@@ -139,13 +139,13 @@ function eval_menu($path) {
           $active= ' active';
           $elem= $m->elem;
           $backref= $CMS 
-            ? "onclick=\"go(arguments[0],'page=$href!*','{$prefix}$href!*','$input',0);\""
+            ? "onclick=\"go(arguments[0],'page=$href!*','{$prefix}$href!*','$input',0,'$m->event');\""
 //            : "href='{$prefix}$href!*'";
             : "href='{$prefix}$href2'";
           $top= array_shift($path);
         }
         $jmp= $CMS 
-          ? "onclick=\"go(arguments[0],'page=$href','{$prefix}$href','$input',0);\""
+          ? "onclick=\"go(arguments[0],'page=$href','{$prefix}$href','$input',0,'$m->event');\""
 //          : "href='{$prefix}$href'";
           : "href='{$prefix}$href2'";
         $mainmenu[$main][]= "<a $jmp class='jump$level$active'><span>$m->nazev</span></a>";
@@ -329,6 +329,39 @@ __EOD;
   }
 }
 /** ==========================================================================================> MENU */
+# --------------------------------------------------------------------------------------- menu event
+# 
+function menu_event($cmd,$event,$par=null) {
+  $msg= '';
+  switch ( $event ) {
+  // menu.elem pro pozvanky = [akce=id;]clanek=1
+  case 'předřazená akce':
+    list($mid,$elem)= select("mid,elem","menu","wid=2 AND event='$event'");
+    list($xid)= explode(';',$elem);
+    list($x,$id)= explode('=',$xid);
+    if ( $cmd=='get' ) {
+      $msg= $x=='akce' 
+          ? "před obecnou pozvánkou (článek ID=1) je vložena akce s ID=$id, zapsáním jiného ID ji lze změnit nebo nulou zrušit." 
+          : "před obecnou pozvánkou (článek ID=1) není žádná akce, pokud ji mám přidat, napiš její ID";
+    }
+    else {
+      $id= $par->id;
+      if ( $id=='' ) {
+        $msg= "pozvánka je nezměněna";
+      }
+      else {
+        // článek5=<hr>
+        $elem= $id==0 ? "clanek=1" : "akce=$id;clanek=5;clanek=1";
+        query("UPDATE menu SEt elem='$elem' WHERE mid=$mid");
+        $msg= $id 
+            ? "před obecnou pozvánkou (článek ID=1) je akce s ID=$id" 
+            : "akce byla z obecné pozvánky odstraněna";
+      }
+    }
+    break;
+  }
+  return $msg;
+}
 # ------------------------------------------------------------------------------------ menu add_elem
 # přidá do menu další element
 function menu_add_elem($mid,$table) {
@@ -598,7 +631,86 @@ function cms_send_potvrzeni($email,$idl,$ida) {
     <br>Bližší info vám zašleme dva týdny předem.
     <br><br>Přeji vám hezký den.
     <br>sr. Alžběta, mail: <a href='mailto:$reply'>$reply</a>";
-  $ok= cms_mail_send($email,$subj,$body,$reply);
-  return $ok;    
+  $okmsg= cms_mail_send($email,$subj,$body,$reply);
+  return $okmsg;    
+}
+# ------------------------------------------------------------------------------------ feb mail_send
+/**
+ * Pošle mail přes SMTP službu pod gmailem
+ * @param string $address adresa příjemnce mailu
+ * @param string $subject předmět mailu
+ * @param string $body text mailu
+ * @param string $reply_to nepovinná adresa pro odpověď
+ * @return object {ok:0/1,msg:''/popis chyby}
+ */
+function feb_mail_send($address,$subject,$body,$reply='') { 
+  global $EZER;
+  $web_path= $_SESSION['web']['path'];
+  $phpmailer_path= "$web_path/ezer3.1/server/licensed/phpmailer1";
+  $_SESSION['trace']['feb_mail_send-1']= $phpmailer_path;
+  $_SESSION['trace']['feb_mail_send-2']= file_exists("$web_path/ezer3.1/server/licensed/phpmailer") ? 1 : 0;
+  $_SESSION['trace']['feb_mail_send-3']= file_exists($phpmailer_path) ? 1 : 0;
+  $_SESSION['trace']['feb_mail_send-4']= $EZER->CMS->GMAIL;
+  require_once("$phpmailer_path/class.phpmailer.php");
+  require_once("$phpmailer_path/class.smtp.php");
+  $ret= (object)array('ok'=>1,'msg'=>'');
+  // nastavení phpMail
+  $mail= new PHPMailer(true);
+  $_SESSION['trace']['feb_mail_send']= $mail ? 1 : 0;
+//  try {
+//    $mail->SMTPDebug = 0;
+    $mail->SetLanguage('cs');//,"$phpmailer_path/language/");
+    $mail->IsSMTP();
+    $mail->SMTPAuth = true; // enable SMTP authentication
+    $mail->SMTPSecure= "ssl"; // sets the prefix to the server
+    $mail->Host= "smtp.gmail.com"; // sets GMAIL as the SMTP server
+    $mail->Port= 465; // set the SMTP port for the GMAIL server
+    $mail->Username= $EZER->CMS->GMAIL->mail;
+    $mail->Password= $EZER->CMS->GMAIL->pswd;
+    $mail->CharSet= "UTF-8";
+    $mail->IsHTML(true);
+    // zpětné adresy
+    $mail->ClearReplyTos();
+    $mail->AddReplyTo($reply ? $reply : $EZER->CMS->GMAIL->mail);
+    $mail->SetFrom($EZER->CMS->GMAIL->mail, $EZER->CMS->GMAIL->name);
+    // vygenerování mailu
+    $mail->Subject= $subject;
+    $mail->Body= $body;
+    // přidání příloh
+    $mail->ClearAttachments();
+    // přidání adresy
+    $mail->ClearAddresses();
+    $mail->AddAddress($address);
+    // přidání kopií
+    $mail->ClearCCs();
+    if ( $reply )
+      $mail->AddCC($reply);
+    if ( $EZER->CMS->TEST ) {
+      $ret->msg= "TESTOVÁNÍ - vlastní mail.send je vypnuto";
+    }
+    else {
+    // odeslání mailu
+//      $mail->Send();
+//      $mail->smtpClose();
+    // odeslání mailu
+      try {
+        $ok= $mail->Send();
+        $ret->msg= $ok ? '' : $mail->ErrorInfo;
+        $ret->err= $ok ? 0 : 1;
+        $ret->ok= $ok ? 1 : 0;
+      } 
+      catch ( Exception $exc ) {
+        $ret->msg= $mail->ErrorInfo;
+        $ret->err= 2;
+        $ret->ok= 0;
+      }
+    }
+//  }
+//  catch (Exception $e) {
+//    $ret->msg= $mail->ErrorInfo;
+//    $ret->ok= $e;
+//    $ret->ok= 0;
+//  }
+  return $ret;
 }
 ?>

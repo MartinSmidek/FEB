@@ -10,6 +10,7 @@ proc onfocus () {
 group p { 
   var do_refresh=0      // trigger pro vyvolání refresh při onfocus po změně menu
   var do_go=1
+  var do_event=''       // jméno CMS události při výběru menu viz c.event
   var last='home'       //'home'
   var full_page=0       // ukázat celou stránku
   var TEST=0            // předat jako Ezer.cms.TEST a $EZER->CMS->TEST
@@ -26,14 +27,25 @@ group p {
   use w: form _w [0,30,,]
 # ----------------------------------------------------------------------------==> emulace událostí
   var page: object // {html,edit,id}
-  proc cms_go(ref) { echo("přepnutí webu na ",ref); do_go.get; go(ref) }
-  proc cms_menu(ref) { echo("přepnutí dle menu ",ref); do_go.get; go_menu(ref) }
-  proc refresh() { cms_go(last.get); }
+  proc cms_go(ref,event) { 
+    echo("přepnutí webu na ",ref,' event=',event); 
+    [ event; c.event.set(event); do_event.set(event); c.event.display(1) | c.event.display(0) ];
+    c.event.display(cconc(event,1,0)); do_event.set(event);  
+    do_go.get; 
+    go(ref) 
+  }
+  proc cms_menu(ref,event) { 
+    echo("přepnutí dle menu ",ref,' event=',event); 
+    [ event; c.event.set(event); do_event.set(event); c.event.display(1) | c.event.display(0) ];
+    do_go.get; 
+    go_menu(ref) 
+  }
+  proc refresh() { cms_go(last.get,''); }
   proc go(ref) { 
     echo('go ',ref);
     history.set(last.get);
     last.set(ref);
-    c.verze.set(sys('ezer','version')); 
+//    c.verze.set(sys('ezer','version')); 
     page.set(ask('page',ref,full_page.get,has_skill('a')));
     c.page_edit.set(page.get('edit'));
     c.page_id.set(page.get('id'));
@@ -44,7 +56,7 @@ group p {
     echo('go_menu ',ref);
     history.set(last.get);
     last.set(ref);
-    c.verze.set(sys('ezer','version')); 
+//    c.verze.set(sys('ezer','version')); 
     page.set(ask('page',ref,full_page.get,has_skill('a')));
     c.page_edit.set(page.get('edit'));
     c.page_id.set(page.get('id'));
@@ -56,7 +68,7 @@ group p {
     button [80,5,,]  { title:"[fa-chevron-left]"    
       proc onclick() { hide_all; go(history.get) } }
     button [101,5,,] { title:"[fa-repeat]"          
-      proc onclick() { hide_all; cms_go(last.get) } }
+      proc onclick() { hide_all; cms_go(last.get,'') } }
     button [123,5,,] { title:"[fa-chevron-right]", format:'d'
       proc onclick() { hide_all } }
     button [300,5,,] { title:"[fa-edit] Editovat zobrazený článek, akci, buňku"
@@ -71,19 +83,35 @@ group p {
     field page_edit [574,5,50,] { title:'zdroj' }
     field page_id   [650,5,40,] { title:'ID' format:'r' }
     check full [150,5,100,] { title:"celá stránka"
-      proc onchange() { full_page.set(this.get); cms_go(last.get) } }
-    button [-95,5,,] { skill:'a|a', title:"[fa-gears] CMS" 
-      proc onclick() { 
-        hide_all; 
-        CMS.modal 
-    } }
-    check test [-190,5,65,] { title:"TEST", value:'0', style:'color:white'
+      proc onchange() { full_page.set(this.get); cms_go(last.get,'') } }
+    button event [700,5,,] { style:'n' 
+      proc onclick() { var msg:text, id:number
+        switch(do_event.get,
+          # ---------------------------------------- předřaď akci
+          # pozvánka je článek s id_clanek=1
+          # následujícím dialogem je možné před něj přidat akci s daným id_akce, nebo toto zrušit
+          'předřazená akce',{ 
+            msg.set(ask('menu_event','get',do_event.get));
+            id.set(prompt2(msg,''));
+            msg.set(ask('menu_event','set',do_event.get,object('id',id)));
+            alert(msg);
+            p.refresh;
+          }
+        )
+      }
+    }
+    check test [-81,5,65,] { title:"TEST", value:'0', style:'color:white'
       proc onchange() { 
         TEST.set(this.get); 
         function('x',"Ezer.cms.test=x;return 1;",TEST.get); 
         ask('cms_def_test',TEST.get);
     } }
-    label verze [-150,8,40,] { title:'ezer', style:'font-size:10pt;color:white' } 
+    button [-38,5,,] { skill:'a|a', title:"[fa-gears] CMS" 
+      proc onclick() { 
+        hide_all; 
+        CMS.modal 
+    } }
+//    label verze [-150,8,40,] { title:'ezer', style:'font-size:10pt;color:white' } 
 //    button [-35,5,,] { title:"odhlásit", style:'z-index:999'
 //      proc onclick() { var ref:text
 //        //logout;
@@ -229,6 +257,7 @@ panel CMS [0,0,600,296] { type:'popup',  title:'CMS - definice menu', par:°{min
     field typ [153,206,22,17] { title:"^typ" }
     field rank [186,206,22,17] { title:"^rank" }
     field level [218,206,22,17] { title:"^level" }
+    field event [256,206,127,17] { title:"^CMS dialog při zobrazení" }
     field ref [6,239,79,] { title:"^ref" 
       proc onchanged() { 
       confirm("Po změně reference je třeba menu uložit do tabulky");
@@ -242,4 +271,3 @@ panel CMS [0,0,600,296] { type:'popup',  title:'CMS - definice menu', par:°{min
     }
   }
 }
-

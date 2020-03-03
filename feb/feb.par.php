@@ -16,7 +16,7 @@
         'GMAIL'=>(object)array(
           /// přístup na použitý gmail
           'mail'=>'web.evangelizacni.bunky@gmail.com',
-          'pswd'=>'meditacnizahrada',
+          'pswd'=>'MeditacniZahrada',
           'name'=>'Farní evangelizační buňky'
         ),
         'FORM'=>array(
@@ -116,7 +116,8 @@
               ''=>''
             ),
             'CALL'=>array(
-              'sendmail_OA'=> "cms_send_potvrzeni"       // parametry mail,IDO,IDA
+              'sendmail_OA'=> "cms_send_potvrzeni",     // parametry mail,IDO,IDA
+              'sendmail' => "feb_mail_send"             // par: email,subj,body,reply => {ok,msg}
             )
           ),
           // přihlášení do CMS
@@ -144,6 +145,11 @@
       'ezer_system'   => array(0,'localhost','gandi','radost','utf8','feb'),
       'ezer_kernel'   => array(0,'localhost','gandi','radost','utf8','feb')
     )
+//    array(  // evangelizacnibunky.cz
+//      'feb'           => array(0,'localhost','feb','Radost_kabatu_13','utf8'),
+//      'ezer_system'   => array(0,'localhost','feb','Radost_kabatu_13','utf8','feb'),
+//      'ezer_kernel'   => array(0,'localhost','feb','Radost_kabatu_13','utf8','feb')
+//    )
   );
   
   global $ezer_server, $ezer_db, $mysql_db;

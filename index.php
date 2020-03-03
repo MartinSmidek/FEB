@@ -80,7 +80,10 @@ $fe_level= isset($_SESSION['web']['fe_level']) ? $_SESSION['web']['fe_level'] : 
 //  $GET_rok= isset($_GET['rok']) ? $_GET['rok'] : '';
 
   // absolutní cesta
-  $ezer_path_root= $_SESSION['web']['path']= $_SERVER['DOCUMENT_ROOT'];
+  $ezer_path_root= $_SESSION['web']['path']= array(
+      "C:/Ezer/beans/feb",
+      "/home/users/gandi/evangelizacnibunky.cz/web"
+  )[$ezer_server];
   global $CMS;
   $CMS= 0;
   //require_once("man/2template_ch.php");

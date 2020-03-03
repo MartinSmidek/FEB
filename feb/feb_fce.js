@@ -61,9 +61,10 @@ function admin(a) {
 }
 // ---------------------------------------------------------------------------------------------- go
 // předá CMS info na kterou stránku webu přepnout
-function go(e,href,mref,input,nojump) {
+function go(e,href,mref,input,nojump,event) {
   if ( e ) e.stopPropagation();
   nojump= nojump||0;
+  event= event||'';
   var url, http, page, u= href.split('page=');
   if ( u.length==2 ) {
     http= u[0];
@@ -81,7 +82,7 @@ function go(e,href,mref,input,nojump) {
     page= page + '!!'+ search;
   }
 //  history.pushState({},'',mref ? mref : http+'page='+page);
-  Ezer.run.$.part.feb.part.ora.part.web.part.p._call(0,nojump?'cms_menu':'cms_go',page)
+  Ezer.run.$.part.feb.part.ora.part.web.part.p._call(0,nojump?'cms_menu':'cms_go',page,event)
   return false;
 }
 // ===========================================================================================> AJAX
