@@ -97,8 +97,8 @@
               'Ojmeno'    => array('t','+','jméno',190), 
               'Oprijmeni' => array('t','+','příjmení',160),
               'Onarozeni' => array('d','-','narození',68),
-              'Oulice'    => array('t','*','ulice',177), 
-              'Opsc'      => array('t','*','psč',82), 
+              'Oulice'    => array('t','*','ulice',140), 
+              'Opsc'      => array('t','*','psč',40), 
               'Oobec'     => array('t','*','obec',158),
               'Oknez'     => array('c','-','jsem kněz'),
               'Rpoznamka' => array('t','-','poznámka pro pořadatele',435,50)
