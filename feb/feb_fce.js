@@ -61,7 +61,7 @@ function admin(a) {
 }
 // ---------------------------------------------------------------------------------------------- go
 // předá CMS info na kterou stránku webu přepnout
-function go(e,href,mref,input,nojump,event) {
+function go(e,href,mref,idm,input,nojump,event) {
   if ( e ) e.stopPropagation();
   nojump= nojump||0;
   event= event||'';
@@ -82,8 +82,23 @@ function go(e,href,mref,input,nojump,event) {
     page= page + '!!'+ search;
   }
 //  history.pushState({},'',mref ? mref : http+'page='+page);
-  Ezer.run.$.part.feb.part.ora.part.web.part.p._call(0,nojump?'cms_menu':'cms_go',page,event)
+  Ezer.run.$.part.feb.part.ora.part.web.part.p._call(0,nojump?'cms_menu':'cms_go',page,idm,event)
   return false;
+}
+// ----------------------------------------------------------------------------------------- opravit
+function opravit(typ,id) {
+  Ezer.run.$.part.feb.part.ora.part.web.part.p._call(0,'opravit',typ,id);
+  return 1;
+}
+// ---------------------------------------------------------------------------------------- posunout
+function posunout(_typ,_id,_idm,_dolu) {
+  Ezer.run.$.part.feb.part.ora.part.web.part.p._call(0,'posunout',_typ,_id,_idm,_dolu);
+  return 1;
+}
+// ---------------------------------------------------------------------------------------- posunout
+function odpojit(_id,_idm) {
+  Ezer.run.$.part.feb.part.ora.part.web.part.p._call(0,'odpojit',_id,_idm);
+  return 1;
 }
 // ===========================================================================================> AJAX
 // ------------------------------------------------------------------------------------------- error

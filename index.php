@@ -96,4 +96,3 @@ $fe_level= isset($_SESSION['web']['fe_level']) ? $_SESSION['web']['fe_level'] : 
   show_page($html,$full_page);
   exit;
 //}
-?>

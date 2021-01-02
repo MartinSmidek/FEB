@@ -510,4 +510,3 @@ function feb_fara($n) {
 //         SELECT farnost,ulice,psc,misto FROM ezer_rz.fary");
   return 1;
 }
-?>

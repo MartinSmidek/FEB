@@ -66,13 +66,14 @@ function read_menu($level=0) {
 # -------------------------------------------------------------------------------------==> eval_menu
 # path = [ mid, ...]
 function eval_menu($path) { 
-  global $CMS, $currpage, $tm_active, $ezer_server, $index;
+  global $CMS, $currpage, $curr_idm, $curr_event, $tm_active, $ezer_server, $index;
   global $menu, $topmenu, $mainmenu, $elem, $backref, $top;
   $index= "index.php";
   $prefix= array("http://feb.bean:8080/","https://evangelizacnibunky.cz/")[$ezer_server];
   // pokud má menu M submenu S tak bude prvkem vnořené pole - první ještě patří do mainmenu
   $topmenu= $mainmenu= array();
   $currpage= implode('!',$path);
+  $curr_idm= $curr_event= '';
   $top= array_shift($path);
   $main= $main_ref= $main_sub= 0;
   $elem= '';
@@ -89,26 +90,13 @@ function eval_menu($path) {
       }
     }
     $href= $m->ref;
+    $mid= $m->mid_sub ?: $m->mid; 
+    $event= $m->mid_sub ? $menu[$m->mid_sub]->event : $m->event;
     $jmp= $CMS 
-      ? "onclick=\"go(arguments[0],'page=$href','{$prefix}$href','$input',0,'$m->event');\""
+      ? "onclick=\"go(arguments[0],'page=$href','{$prefix}$href','$mid','$input',0,'$event');\""
+        . " title='obsahuje {$m->elem}'"
       : "href='{$prefix}$href'";
     switch ( (int)$m->typ ) {
-//    case 0:                             // zobrazení top menu
-//      $active= '';
-//      if ( $m->ref===$top ) {
-//        $active= ' active';
-//        $elem= $m->elem;
-////        $top= array_pop($path);
-//        $tm_active= " class='active'";
-//        $backref= $CMS 
-//          ? "onclick=\"go(arguments[0],'page=$href!*','{$prefix}$href!*','$input',0);\""
-//          : "href='{$prefix}$href!*'";
-//        $top= array_shift($path);
-//      }
-//      if ( $m->nazev ) {
-//        $topmenu[$m->mid]= "<a $jmp class='jump$level$active'><span>$m->nazev</span></a>";
-//      }
-//      break;
     case 1:                             // zobrazení main menu
       $n_main++;
       $active= '';
@@ -119,8 +107,10 @@ function eval_menu($path) {
         $o_main= $n_main;
         $active= $m->has_subs ? ' active subs' : ' active';
         $elem= $m->elem;
+        $curr_idm= $main_sub ?: $m->mid;
+        $curr_event= $m->event;
         $backref= $CMS 
-          ? "onclick=\"go(arguments[0],'page=$href!*','{$prefix}$href!*','$input',0,'$m->event');\""
+          ? "onclick=\"go(arguments[0],'page=$href!*','{$prefix}$href!*','$curr_idm','$input',0,'$m->event');\""
 //          : "href='{$prefix}$href!*'";
           : "href='{$prefix}$href'";
         $top= array_shift($path);
@@ -136,16 +126,20 @@ function eval_menu($path) {
         $href= "$main_ref!$m->ref";
         $href2= "$main_ref/$m->ref";
         if ( $top ? $m->ref===$top : $m->mid===$main_sub ) {
+          $curr_idm= $m->mid;
+          $curr_event= $m->event;
           $active= ' active';
           $elem= $m->elem;
           $backref= $CMS 
-            ? "onclick=\"go(arguments[0],'page=$href!*','{$prefix}$href!*','$input',0,'$m->event');\""
+            ? "onclick=\"go(arguments[0],'page=$href!*','{$prefix}$href!*','$curr_idm','$input',0,'$m->event');\""
+              . " title='obsahuje {$m->elem}'"
 //            : "href='{$prefix}$href!*'";
             : "href='{$prefix}$href2'";
           $top= array_shift($path);
         }
         $jmp= $CMS 
-          ? "onclick=\"go(arguments[0],'page=$href','{$prefix}$href','$input',0,'$m->event');\""
+          ? "onclick=\"go(arguments[0],'page=$href','{$prefix}$href','$curr_idm','$input',0,'$m->event');\""
+            . " title='obsahuje {$m->elem}'"
 //          : "href='{$prefix}$href'";
           : "href='{$prefix}$href2'";
         $mainmenu[$main][]= "<a $jmp class='jump$level$active'><span>$m->nazev</span></a>";
@@ -155,11 +149,58 @@ function eval_menu($path) {
   }
   return $elem;
 }
+# ------------------------------------------------------------------------------------==> title menu
+# vygeneruje title=... oncontextmenu=... podle dodaných parametrů, kde
+# title= obsah title
+# items= pole zkratek 0123 kde 0=|- 
+#   1: p|e|x|m|z		=přidat|editovat|eXclude|move|zobraz(abstrakt nebo clanek) 
+#   2: a|c|k|s|o|f|t|i	=akce|článek|kniha|sekce|obrázky|fotky|time-kalendář|invitation-pozvánka
+#   3: n|d				=nahoru|dolů  
+# id,kid,mid jsou id a x je další parametr
+# pokud je definováno pole cmenu (elementem menu) přidá se na začátek
+function title_menu($title,$items,$typ,$id=0,$idm=0) {
+  global $cmenu;
+  $typ_cz= array('clanek'=>'článek','akce'=>'akci','bunka'=>'buňku');
+  $typ_cz= $typ_cz[$typ];
+  $cm= array();
+  // přidej na začátek menu definované elementem menu
+  if ( count($cmenu) ) {
+    $items= implode(';',$cmenu).";$items";
+  }
+  $items= explode(';',$items);
+  foreach ($items as $item) {
+    $c= '';
+    if ( '-'==substr($item,0,1) ) { // řádek před item
+      $c= '-';
+      $item= substr($item,1);
+    }
+    // případné parametry itemu budou číslovány od 1
+    $x= explode(',',$item);
+    $item= $x[0];
+    switch ($item) {
+    // e - editace
+    case 'e':  $cm[]= "['{$c}editovat $typ_cz',function(el){ opravit('$typ',$id); }]"; break;
+    // p - přidání
+    case 'pcn': $cm[]= "['{$c}přidat článek na začátek',function(el){ pridat('clanek',$idm,1);}]"; break;
+    case 'pcd': $cm[]= "['{$c}přidat článek na konec',function(el){ pridat('clanek',$idm,0);}]"; break;
+      // x - rušení
+    case 'xa':  $cm[]= "['{$c}odpojit popis akce',function(el){ odpojit($id,$idm);}]"; break;
+  // m - posunutí
+    case 'md': $cm[]= "['{$c}posunout dolů',function(el){ posunout('$typ',$id,$idm,1);}]"; break;
+    case 'mn': $cm[]= "['{$c}posunout nahoru',function(el){ posunout('$typ',$id,$idm,0);}]"; break;
+    default: fce_error("'$item' není menu");
+    }
+  }
+  $on= " title='$title' oncontextmenu=\"Ezer.fce.contextmenu([\n"
+      .implode(",\n",$cm)
+      ."],arguments[0],0,0,'#$typ$id');return false;\"";
+  return $on;
+}
 # -------------------------------------------------------------------------------------==> eval_elem
 // desc :: key [ = ids ]
 // ids  :: id1 [ / id2 ] , ...    -- id2 je klíč v lokální db pro ladění
 function eval_elem($desc) {
-  global $CMS, $ezer_server, $load_ezer;
+  global $CMS, $curr_idm, $curr_event, $ezer_server, $load_ezer;
   global $edit_entity, $edit_id;
   $edit_entity= '';
   $edit_id= 0;
@@ -193,28 +234,39 @@ function eval_elem($desc) {
       if ( $prihl ) {
         $html.= cms_form_ref("Přihláška na seminář","seminar",$id,$nazev);
       }
-      $html.= $text;
+      $menu= $CMS 
+          ? title_menu("akce $id","e".($curr_event=='join_akce'?';-xa':'').";-md;mn",'akce',$id,$curr_idm)
+          : '';
+      $html.= "<div id='akce$id' class='text'$menu>$text</div>";
       break;
 
     case 'bunka': # -------------------------------------------------- . bunka
       $edit_entity= 'bunka';
       $edit_id= $id;
-      $html.= select("web_text","cell","id_cell=$id");
+      $web_text= select("web_text","cell","id_cell=$id");
+      $menu= $CMS 
+          ? title_menu("buňka $id","e;-md;mn",'bunka',$id,$curr_idm)
+          : '';
+      $html.= "<div id='bunka$id' class='text'$menu>$web_text</div>";
       break;
 
     case 'clanek': # ------------------------------------------------- . článek
       $edit_entity= 'clanek';
       $edit_id= $id;
-      $html.= select("web_text","clanek","id_clanek=$id");
+      $web_text= select("web_text","clanek","id_clanek=$id");
+      $menu= $CMS 
+          ? title_menu("článek $id","e;-md;mn",'clanek',$id,$curr_idm)
+          : '';
+      $html.= "<div id='clanek$id' class='text'$menu>$web_text</div>";
       break;
 
-    case 'mapa':    # ------------------------------------------------ . mapa
-      global $CMS;
-      $load_ezer= true;
-      $html.= !$CMS ? '' : <<<__EOT
-        <script>skup_mapka();</script>
-__EOT;
-      break;
+//    case 'mapa':    # ------------------------------------------------ . mapa
+//      global $CMS;
+//      $load_ezer= true;
+//      $html.= !$CMS ? '' : <<<__EOT
+//        <script>skup_mapka();</script>
+//__EOT;
+//      break;
 
     }
   }
@@ -329,39 +381,6 @@ __EOD;
   }
 }
 /** ==========================================================================================> MENU */
-# --------------------------------------------------------------------------------------- menu event
-# 
-function menu_event($cmd,$event,$par=null) {
-  $msg= '';
-  switch ( $event ) {
-  // menu.elem pro pozvanky = [akce=id;]clanek=1
-  case 'předřazená akce':
-    list($mid,$elem)= select("mid,elem","menu","wid=2 AND event='$event'");
-    list($xid)= explode(';',$elem);
-    list($x,$id)= explode('=',$xid);
-    if ( $cmd=='get' ) {
-      $msg= $x=='akce' 
-          ? "před obecnou pozvánkou (článek ID=1) je vložena akce s ID=$id, zapsáním jiného ID ji lze změnit nebo nulou zrušit." 
-          : "před obecnou pozvánkou (článek ID=1) není žádná akce, pokud ji mám přidat, napiš její ID";
-    }
-    else {
-      $id= $par->id;
-      if ( $id=='' ) {
-        $msg= "pozvánka je nezměněna";
-      }
-      else {
-        // článek5=<hr>
-        $elem= $id==0 ? "clanek=1" : "akce=$id;clanek=5;clanek=1";
-        query("UPDATE menu SEt elem='$elem' WHERE mid=$mid");
-        $msg= $id 
-            ? "před obecnou pozvánkou (článek ID=1) je akce s ID=$id" 
-            : "akce byla z obecné pozvánky odstraněna";
-      }
-    }
-    break;
-  }
-  return $msg;
-}
 # ------------------------------------------------------------------------------------ menu add_elem
 # přidá do menu další element
 function menu_add_elem($mid,$table) {
@@ -370,6 +389,30 @@ function menu_add_elem($mid,$table) {
   $id= mysql_insert_id();
   $elem= ($elem ? "$elem;" : '') . "$table=$id";
   query("UPDATE menu SET elem='$elem' WHERE wid=2 AND mid=$mid");
+  return 1;
+}
+# ------------------------------------------------------------------------------------ menu add_akce
+# přidá do menu $idm element akce=$id, akce musí existovat
+function menu_add_akce($id,$idm) {
+  $ok= 0;
+  $elems= select("elem","menu","mid=$idm");
+  // ujisti se o existenci akce
+  $akce= select("COUNT(*)",'akce',"id_akce='$id'");
+  if ($akce) {
+    $elems= "akce=$id" . ($elems ? ";$elems" : '');
+    query("UPDATE menu SET elem='$elems' WHERE mid=$idm");
+    $ok= 1;
+  }
+  return $ok;
+}
+# ------------------------------------------------------------------------------------ menu del_akce
+# vypustí z menu $idm element akce=$id
+function menu_del_akce($id,$idm) {
+  $elems= select("elem","menu","mid=$idm");
+  $elems= explode(';',$elems);
+  $elems= array_diff($elems,array("akce=$id"));
+  $elems= implode(';',$elems);
+  query("UPDATE menu SET elem='$elems' WHERE mid=$idm");
   return 1;
 }
 # --------------------------------------------------------------------------------------- menu shift
@@ -401,6 +444,33 @@ function menu_shift($mid,$down) {
     $i1= $i+1;
     query("UPDATE menu SET rank=$i1 WHERE wid=2 AND mid=$mi");
   }
+  return 1;
+}
+# ---------------------------------------------------------------------------------- menu shift_elem
+# posune element o jedno dolů (pro down=0 nahoru)
+function menu_shift_elem($typ,$id,$mid,$down) {
+  // zjistíme seznam elementů
+  $elems= select("elem","menu","mid=$mid");
+                                                      display($elems);
+  $ms= explode(';',$elems);
+  $elem= "$typ=$id";
+  $i= array_search($elem,$ms);
+  $last= count($ms)-1;
+  if ( $down ) { // dolů
+    if ( $i<$last ) {
+      $ms[$i]= $ms[$i+1];
+      $ms[$i+1]= $elem;
+    }
+  }
+  else { // nahoru
+    if ( $i>0 ) {
+      $ms[$i]= $ms[$i-1];
+      $ms[$i-1]= $elem;
+    }
+  }
+  $elems= implode(';',$ms);                 
+                                                      display($elems);
+  query("UPDATE menu SET elem='$elems' WHERE mid=$mid");
   return 1;
 }
 # ------------------------------------------------------------------------------------ menu upd_akce
@@ -549,29 +619,6 @@ function menu_tree($wid) {
 }
 /** ========================================================================================> SERVER */
 # funkce na serveru přes AJAX
-# ------------------------------------------------------------------------------------------ session
-# getter a setter pro _SESSION
-function session($is,$value=null) {
-  $i= explode(',',$is);
-  if ( is_null($value) ) {
-    // getter
-    switch (count($i)) {
-    case 1: $value= $_SESSION[$i[0]]; break;
-    case 2: $value= $_SESSION[$i[0]][$i[1]]; break;
-    case 3: $value= $_SESSION[$i[0]][$i[1]][$i[2]]; break;
-    }
-  }
-  else {
-    // setter
-    switch (count($i)) {
-    case 1: $_SESSION[$i[0]]= $value; break;
-    case 2: $_SESSION[$i[0]][$i[1]]= $value; break;
-    case 3: $_SESSION[$i[0]][$i[1]][$i[2]]= $value; break;
-    }
-    $value= 1;
-  }
-  return $value;
-}
 # --------------------------------------------------------------------------------------- ask server
 function ask_server($x) {
 //  global $y, $trace;
@@ -713,4 +760,3 @@ function feb_mail_send($address,$subject,$body,$reply='') {
 //  }
   return $ret;
 }
-?>

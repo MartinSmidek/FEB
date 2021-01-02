@@ -10,45 +10,48 @@ proc onfocus () {
 group p { 
   var do_refresh=0      // trigger pro vyvolání refresh při onfocus po změně menu
   var do_go=1
-  var do_event=''       // jméno CMS události při výběru menu viz c.event
-  var last='home'       //'home'
+  var last='aktuality', // aktuální ref
+      last_idm=7,       // .. id_menu 
+      last_event= ''    // .. event
   var full_page=0       // ukázat celou stránku
   var TEST=0            // předat jako Ezer.cms.TEST a $EZER->CMS->TEST
   var history: array, top=-1
   use c: form _c [0,0,,]
   use w: form _w [0,30,,]
-  proc onstart() { var gets:object
-    gets.set(function('return Ezer.get;'));
-    last.set(cconc(gets.page,gets.page,'home'));
+  func onstart() { var gets:object
+    gets= function('return Ezer.get;');
+    last= gets.page ? gets.page : last;
     function('return admin(0)');
-    c.full.set(full_page.get);
-    go_menu(last.get);
+    c.full= full_page;
+    go_menu(last);
   }
   use w: form _w [0,30,,]
 # ----------------------------------------------------------------------------==> emulace událostí
   var page: object // {html,edit,id}
-  proc cms_go(ref,event) { 
-    echo("přepnutí webu na ",ref,' event=',event); 
-    [ event; c.event.set(event); do_event.set(event); c.event.display(1) | c.event.display(0) ];
-    c.event.display(cconc(event,1,0)); do_event.set(event);  
-    do_go.get; 
-    go(ref) 
+  func cms_go(ref,idm,event) { 
+    echo(`přepnutí odkazem na ${ref}/${idm}, event=${event}`); 
+    last_idm= idm; last_event= event;
+    make_event(event);
+//    [ event; c.event.set(event); do_event.set(event); c.event.display(1) | c.event.display(0) ];
+//    c.event.display(cconc(event,1,0)); do_event.set(event);  
+    if (do_go) go(ref) 
   }
-  proc cms_menu(ref,event) { 
-    echo("přepnutí dle menu ",ref,' event=',event); 
-    [ event; c.event.set(event); do_event.set(event); c.event.display(1) | c.event.display(0) ];
-    do_go.get; 
-    go_menu(ref) 
+  func cms_menu(ref,idm,event) { 
+    echo(`přepnutí dle menu na ${ref}/${idm}, event=${event}`); 
+    last_idm= idm; last_event= event;
+    make_event(event);
+//    [ event; c.event.set(event); do_event.set(event); c.event.display(1) | c.event.display(0) ];
+    if (do_go) go_menu(ref) 
   }
-  proc refresh() { cms_go(last.get,''); }
+  func refresh() { cms_go(last,last_idm,last_event); }
   proc go(ref) { 
     echo('go ',ref);
     history.set(last.get);
     last.set(ref);
 //    c.verze.set(sys('ezer','version')); 
     page.set(ask('page',ref,full_page.get,has_skill('a')));
-    c.page_edit.set(page.get('edit'));
-    c.page_id.set(page.get('id'));
+//    c.page_edit.set(page.get('edit'));
+//    c.page_id.set(page.get('id'));
     w.page.set(page.get('html'));
     function("return jump_fokus();");
   }
@@ -58,68 +61,66 @@ group p {
     last.set(ref);
 //    c.verze.set(sys('ezer','version')); 
     page.set(ask('page',ref,full_page.get,has_skill('a')));
-    c.page_edit.set(page.get('edit'));
-    c.page_id.set(page.get('id'));
+//    c.page_edit.set(page.get('edit'));
+//    c.page_id.set(page.get('id'));
     w.page.set(page.get('html'));
+  }
+  # případná reakce na aktuální menu.event
+  func make_event(event) { var msg:text, id:number
+    c.vloz_akci.display(0);
+    switch(event) {
+      case 'join_akce':
+        c.vloz_akci.display(1); // umožni přidat popis akce jako pozvánku
+        break;
+    }
+  }
+  func opravit(typ,id) { 
+    switch(typ) {
+      case 'akce':   EDITOR.Akce(id); break;
+      case 'bunka':  EDITOR.Bunka(id); break;
+      case 'clanek': EDITOR.Clanek(id); break;
+    }
+    refresh()
+  }
+  func posunout(_typ,_id,_idm,_dolu) { 
+    php.menu_shift_elem(_typ,_id,_idm,_dolu); refresh()
+  }
+  func odpojit(_id,_idm) { // odpojí akci z pozvánek
+    if (_id && !php.menu_del_akce(_id,_idm)) alert(`lze použít jen v pozvánkách`);
+    refresh();
   }
 # ----------------------------------------------------------------------------==> control bar
   form _c [,,*,30] { css:'admin', style:'position:sticky;z-index:1002'
-    proc hide_all() { CMS.hide }
+      func hide_all() { CMS.hide() }
     button [80,5,,]  { title:"[fa-chevron-left]"    
-      proc onclick() { hide_all; go(history.get) } }
+      func onclick() { hide_all(); go(history) } }
     button [101,5,,] { title:"[fa-repeat]"          
-      proc onclick() { hide_all; cms_go(last.get,'') } }
+      func onclick() { hide_all(); cms_go(last,last_idm,last_event) } }
     button [123,5,,] { title:"[fa-chevron-right]", format:'d'
-      proc onclick() { hide_all } }
-    button [300,5,,] { title:"[fa-edit] Editovat zobrazený článek, akci, buňku"
-      proc onclick() { 
-        switch(page_edit.get,
-          'akce',   { EDITOR.Akce(page_id.get) }, 
-          'bunka',  { EDITOR.Bunka(page_id.get) }, 
-          'clanek', { EDITOR.Clanek(page_id.get) }
-        );
-        refresh 
+      func onclick() { hide_all() } }
+    button [270,5,,] { title:"[fa-heart] Přidej nový článek"
+      func() {
     }}
-    field page_edit [574,5,50,] { title:'zdroj' }
-    field page_id   [650,5,40,] { title:'ID' format:'r' }
+    button vloz_akci [401,5,,] { title:"[fa-plug] Připoj existující popis akce"
+      func onclick() { var id:number
+        id= prompt2("zapiš ID akce z Databáze/akce->lidé v pravém horním rožku",'');
+        if (id && !php.menu_add_akce(id,last_idm)) alert(`akce s id=${id} není založena`);
+        refresh();
+    }}
     check full [150,5,100,] { title:"celá stránka"
-      proc onchange() { full_page.set(this.get); cms_go(last.get,'') } }
-    button event [700,5,,] { style:'n' 
-      proc onclick() { var msg:text, id:number
-        switch(do_event.get,
-          # ---------------------------------------- předřaď akci
-          # pozvánka je článek s id_clanek=1
-          # následujícím dialogem je možné před něj přidat akci s daným id_akce, nebo toto zrušit
-          'předřazená akce',{ 
-            msg.set(ask('menu_event','get',do_event.get));
-            id.set(prompt2(msg,''));
-            msg.set(ask('menu_event','set',do_event.get,object('id',id)));
-            alert(msg);
-            p.refresh;
-          }
-        )
-      }
-    }
+      func onchange() { full_page= this; cms_go(last,last_idm,last_event) } }
     check test [-81,5,65,] { title:"TEST", value:'0', style:'color:white'
-      proc onchange() { 
-        TEST.set(this.get); 
-        function('x',"Ezer.cms.test=x;return 1;",TEST.get); 
-        ask('cms_def_test',TEST.get);
+      func onchange() { 
+        TEST= this; 
+        function('x',"Ezer.cms.test=x;return 1;",TEST); 
+        php.cms_def_test(TEST);
     } }
     button [-38,5,,] { skill:'a|a', title:"[fa-gears] CMS" 
-      proc onclick() { 
-        hide_all; 
-        CMS.modal 
+      func onclick() { 
+        hide_all(); 
+        CMS.modal() 
     } }
-//    label verze [-150,8,40,] { title:'ezer', style:'font-size:10pt;color:white' } 
-//    button [-35,5,,] { title:"odhlásit", style:'z-index:999'
-//      proc onclick() { var ref:text
-//        //logout;
-//        ask('server',°{cmd:'be_logout'});
-//        ref.set(conc(function("return Ezer.web.index"),"?page=",last.get));
-//        function('ref',"location.href= ref;",ref);
-//    } }
-    button [-10,5,,] { skill:'a|a', title:"[fa-bars]"           proc onclick() { hide_all; } }
+    button [-10,5,,] { skill:'a|a', title:"[fa-bars]"           func onclick() { hide_all(); } }
   }
 # ----------------------------------------------------------------------------==> web page
   form _w [,,*,*] { style:"position:initial"
@@ -271,3 +272,6 @@ panel CMS [0,0,600,296] { type:'popup',  title:'CMS - definice menu', par:°{min
     }
   }
 }
+
+# ----------------------------------------------------------------------------==> maps
+map map_entity= "i,zkratka,nazev;1:c:clanek,2:a:akce,3:c:bunka" 

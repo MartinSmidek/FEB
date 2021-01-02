@@ -11,26 +11,39 @@ menu feb { title:'feb', type:'main', active:*, _sys:'*'
   tabs doc  {title:"Nápověda", _sys:'*',  include:'onclick,ezer2.help' active:*, skill:'ah' }
   tabs syst {title:"Systém",  include:'onclick,ezer2.syst', _sys:'sys'
     panel pers {type:'right', title:'Osobní nastavení', _sys:'*', include:'onload,ezer2.pers'}
-//    panel data {type:'right', title:'Data', _sys:'nas', skill:'a'
-//      menu {type:'left', active:*
-//        menu {title:'Ladící data',type:'group', _sys:'*'
-//          item {title:'nic takového!' }
-//          item {title:'tabulka LIDI (náhodně))'
-//            proc onclick (i) {
-//              confirm("opravdu mám položky v tabulce LIDI zaměnit náhodnými údaji?");
-//              info.fill(conc(i.owner.title,' - ',i.title),'... probíhá výpočet ...');
-//              info.fill('',ask('feb_random','lidi')) 
-//          }}
-//          item {title:'tabulka FARA (arcibol)'
-//            proc onclick (i) {
-//              confirm("opravdu mám položky v tabulce FARA zaměnit údaji z OL?");
-//              info.fill(conc(i.owner.title,' - ',i.title),'... probíhá výpočet ...');
-//              info.fill('',ask('feb_fara','lidi')) 
-//          }}
-//        }
-//      }
-//      use info: form right [12,4,,]
-//    }
+    # ===================================================================================== DATABÁZE
+    panel DATA {type:'right', title:'[fa-database] Struktura dat'
+      use info: form right [12,4,,]
+      menu {type:'left', active:*
+        menu  {title:'Struktura dat (výběr)', type:'group'
+          item {title:'[fa-object-group] Přehled struktury dat'
+            proc onclick (i) {
+              info.fill(replace_fa(conc(i.owner.title,' - ',i.title)),"<br>
+                Zjednodušené schema databáze pro <b>FEB</b><br><br>
+                <img src='feb/img/schema_db_feb_2020.png' />
+              ");
+            }
+          }
+          item {title:'[fa-database] entita L-LIDI'     par:°{tab:'lidi'} }
+          item {title:'[fa-database] entita A-AKCE'     par:°{tab:'akce'} }
+          item {title:'[fa-database] entita P-PACK'     par:°{tab:'pack'} }
+          item {title:'[fa-database] entita C-CELL'     par:°{tab:'cell'} }
+          item {title:'[fa-database] entita F-FARA'     par:°{tab:'fara'} }
+          item {title:'[fa-database] relace NA:L-A'     par:°{tab:'na'} }
+          item {title:'[fa-database] relace GO:L-P'     par:°{tab:'go'} }
+          item {title:'[fa-database] relace MA:L-C'     par:°{tab:'ma'} }
+          item {title:'[fa-database] relace JE:L-F'     par:°{tab:'je'} }
+          item {title:'[fa-database] relace VE:C-F'     par:°{tab:'ve'} }
+          item {title:'[fa-database] web MENU'          par:°{tab:'menu'} }
+          item {title:'[fa-database] web CLANEK'        par:°{tab:'clanek'} }
+          proc onclick (i) {
+            clear;
+            info.fill(replace_fa(conc(i.owner.title,' - ',i.title)),
+                ask('i_doc_table_struct',i.par.tab,0,'struc'));
+          }
+        }
+      }
+    }
   }
   tabs off  {title:"[fa-power-off] Odhlásit", type:'logoff' }
 }
@@ -265,9 +278,9 @@ panel UPLOAD [0,0,400,130] { title:' Nahrát soubor', type:'popup'
     form _ff {
       field zip [0,0,300,] { format:'t' }
       button [0,30,,] { title:"[fa-save] Přidej přílohu"
-        proc onclick() { panel.close(zip.get) } }
+        proc onclick() { panel.hide(zip.get) } }
       button [100,30,,] { title:"[fa-undo] Zpět"
-        proc onclick() { panel.close(0) } }
+        proc onclick() { panel.hide(0) } }
     }
   }
 }
