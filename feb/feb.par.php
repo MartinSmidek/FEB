@@ -136,9 +136,9 @@
   $db= array('feb','feb');
   $dbs= array(
     array(  // lokální
-      'feb'           => array(0,'localhost','gandi','','utf8'),
-      'ezer_system'   => array(0,'localhost','gandi','','utf8','feb'),
-      'ezer_kernel'   => array(0,'localhost','gandi','','utf8')
+      'feb'           => array(0,'localhost','gandi','radost','utf8'),
+      'ezer_system'   => array(0,'localhost','gandi','radost','utf8','feb'),
+      'ezer_kernel'   => array(0,'localhost','gandi','radost','utf8')
     ),
     array(  // evangelizacnibunky.cz
       'feb'           => array(0,'localhost','gandi','radost','utf8'),

@@ -11,7 +11,7 @@ group p {
   var do_refresh=0      // trigger pro vyvolání refresh při onfocus po změně menu
   var do_go=1
   var last='aktuality', // aktuální ref
-      last_idm=7,       // .. id_menu 
+      last_idm=43,      // .. id_menu 
       last_event= ''    // .. event
   var full_page=0       // ukázat celou stránku
   var TEST=0            // předat jako Ezer.cms.TEST a $EZER->CMS->TEST
@@ -45,7 +45,7 @@ group p {
   }
   func refresh() { cms_go(last,last_idm,last_event); }
   proc go(ref) { 
-    echo('go ',ref);
+    echo('go ',ref, ' last_idm=',last_idm.get);
     history.set(last.get);
     last.set(ref);
 //    c.verze.set(sys('ezer','version')); 
@@ -86,8 +86,14 @@ group p {
     php.menu_shift_elem(_typ,_id,_idm,_dolu); refresh()
   }
   func odpojit(_id,_idm) { // odpojí akci z pozvánek
-    if (_id && !php.menu_del_akce(_id,_idm)) alert(`lze použít jen v pozvánkách`);
+    if (_id && !php.menu_del_elem(_id,_idm,'akce')) alert(`lze použít jen v pozvánkách`);
     refresh();
+  }
+  func zrusit(_id,_idm) { // odpojí článek z menu.elem
+    if (confirm('opravdu mám zrušit zobrazení článku ',_id,'?')) {
+      php.menu_del_elem(_id,_idm,'clanek');
+      refresh();
+    }
   }
 # ----------------------------------------------------------------------------==> control bar
   form _c [,,*,30] { css:'admin', style:'position:sticky;z-index:1002'
@@ -99,7 +105,9 @@ group p {
     button [123,5,,] { title:"[fa-chevron-right]", format:'d'
       func onclick() { hide_all() } }
     button [270,5,,] { title:"[fa-heart] Přidej nový článek"
-      func() {
+      func onclick() {
+        echo('nový článek pro idm=',last_idm);
+        php.menu_add_elem(last_idm,'clanek'); refresh()
     }}
     button vloz_akci [401,5,,] { title:"[fa-plug] Připoj existující popis akce"
       func onclick() { var id:number

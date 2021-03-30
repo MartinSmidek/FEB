@@ -95,9 +95,14 @@ function posunout(_typ,_id,_idm,_dolu) {
   Ezer.run.$.part.feb.part.ora.part.web.part.p._call(0,'posunout',_typ,_id,_idm,_dolu);
   return 1;
 }
-// ---------------------------------------------------------------------------------------- posunout
+// ----------------------------------------------------------------------------------------- odpojit
 function odpojit(_id,_idm) {
   Ezer.run.$.part.feb.part.ora.part.web.part.p._call(0,'odpojit',_id,_idm);
+  return 1;
+}
+// ------------------------------------------------------------------------------------------ zrusit
+function zrusit(_id,_idm) {
+  Ezer.run.$.part.feb.part.ora.part.web.part.p._call(0,'zrusit',_id,_idm);
   return 1;
 }
 // ===========================================================================================> AJAX

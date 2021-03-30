@@ -35,7 +35,7 @@ function connect() {
     $_SERVER["SERVER_NAME"]=='www.evangelizacnibunky.cz' ? 1 :  -1));   // 1:endora
   $hst1= 'localhost';
   $nam1= $ezer_server ? 'gandi'    : 'gandi';
-  $pas1= $ezer_server ? 'radost'   : '';
+  $pas1= $ezer_server ? 'radost'   : 'radost';
   $ezer_db= array( /* lokální */
     $web_db  =>  array(0,$hst1,$nam1,$pas1,'utf8'),
   );
@@ -51,7 +51,7 @@ function read_menu($level=0) {
   connect();
   // načtení menu
   $menu= array();
-  $mn= mysql_qry("SELECT * FROM menu WHERE wid=2 AND typ>=0 ORDER BY typ,rank");
+  $mn= mysql_qry("SELECT * FROM menu WHERE wid=2 AND typ>=0 ORDER BY typ,mid_top,rank");
   while ($mn && ($m= mysql_fetch_object($mn))) {
 //    if ( $m->typ<0 ) continue; 
     if ( $m->typ==2 && !isset($menu[$m->mid_top]) ) continue; 
@@ -94,7 +94,7 @@ function eval_menu($path) {
     $event= $m->mid_sub ? $menu[$m->mid_sub]->event : $m->event;
     $jmp= $CMS 
       ? "onclick=\"go(arguments[0],'page=$href','{$prefix}$href','$mid','$input',0,'$event');\""
-        . " title='obsahuje {$m->elem}'"
+        . " title='$mid obsahuje {$m->elem}'"
       : "href='{$prefix}$href'";
     switch ( (int)$m->typ ) {
     case 1:                             // zobrazení main menu
@@ -132,14 +132,14 @@ function eval_menu($path) {
           $elem= $m->elem;
           $backref= $CMS 
             ? "onclick=\"go(arguments[0],'page=$href!*','{$prefix}$href!*','$curr_idm','$input',0,'$m->event');\""
-              . " title='obsahuje {$m->elem}'"
+              . " title='$curr_idm obsahuje {$m->elem}'"
 //            : "href='{$prefix}$href!*'";
             : "href='{$prefix}$href2'";
           $top= array_shift($path);
         }
         $jmp= $CMS 
-          ? "onclick=\"go(arguments[0],'page=$href','{$prefix}$href','$curr_idm','$input',0,'$m->event');\""
-            . " title='obsahuje {$m->elem}'"
+          ? "onclick=\"go(arguments[0],'page=$href','{$prefix}$href','$m->mid','$input',0,'$m->event');\""
+            . " title='$curr_idm obsahuje {$m->elem}'"
 //          : "href='{$prefix}$href'";
           : "href='{$prefix}$href2'";
         $mainmenu[$main][]= "<a $jmp class='jump$level$active'><span>$m->nazev</span></a>";
@@ -185,6 +185,7 @@ function title_menu($title,$items,$typ,$id=0,$idm=0) {
     case 'pcd': $cm[]= "['{$c}přidat článek na konec',function(el){ pridat('clanek',$idm,0);}]"; break;
       // x - rušení
     case 'xa':  $cm[]= "['{$c}odpojit popis akce',function(el){ odpojit($id,$idm);}]"; break;
+    case 'xc':  $cm[]= "['{$c}zrušit článek',function(el){ zrusit($id,$idm);}]"; break;
   // m - posunutí
     case 'md': $cm[]= "['{$c}posunout dolů',function(el){ posunout('$typ',$id,$idm,1);}]"; break;
     case 'mn': $cm[]= "['{$c}posunout nahoru',function(el){ posunout('$typ',$id,$idm,0);}]"; break;
@@ -235,7 +236,7 @@ function eval_elem($desc) {
         $html.= cms_form_ref("Přihláška na seminář","seminar",$id,$nazev);
       }
       $menu= $CMS 
-          ? title_menu("akce $id","e".($curr_event=='join_akce'?';-xa':'').";-md;mn",'akce',$id,$curr_idm)
+          ? title_menu("akce $id","e;-md;mn".($curr_event=='join_akce'?';-xa':'')."",'akce',$id,$curr_idm)
           : '';
       $html.= "<div id='akce$id' class='text'$menu>$text</div>";
       break;
@@ -255,7 +256,7 @@ function eval_elem($desc) {
       $edit_id= $id;
       $web_text= select("web_text","clanek","id_clanek=$id");
       $menu= $CMS 
-          ? title_menu("článek $id","e;-md;mn",'clanek',$id,$curr_idm)
+          ? title_menu("článek $id","e;-md;mn;-xc",'clanek',$id,$curr_idm)
           : '';
       $html.= "<div id='clanek$id' class='text'$menu>$web_text</div>";
       break;
@@ -359,7 +360,7 @@ __EOD;
       <link href="/feb/css/edit.css" rel="stylesheet" type="text/css" />
       <link href="/$kernel/client/ezer_cms3.css" rel="stylesheet" type="text/css" />
       <link href="/$kernel/client/licensed/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
-      <link rel="shortcut icon" href="/feb/img/feb.logo.png">
+      <link rel="shortcut icon" href="/feb/img/feb.png">
       <script src="/feb/jquery-3.2.1.min.js" type="text/javascript" charset="utf-8"></script>
       <script src="/$kernel/client/ezer_cms3.js" type="text/javascript" charset="utf-8"></script>
       <script type="text/javascript">
@@ -385,9 +386,12 @@ __EOD;
 # přidá do menu další element
 function menu_add_elem($mid,$table) {
   $elem= select("elem","menu","wid=2 AND mid=$mid");
-  query("INSERT INTO $table () VALUES ()");
+  $ted= date('j.n.Y H:i');
+  query("INSERT INTO $table (web_text) VALUES 
+    ('<h1>Nadpis</h1><p>kontextové menu (pravé tlačítko myši) umožní editaci a posunutí 
+    ... vytvořeno $ted</p>')");
   $id= mysql_insert_id();
-  $elem= ($elem ? "$elem;" : '') . "$table=$id";
+  $elem= "$table=$id".($elem ? ";$elem" : '');
   query("UPDATE menu SET elem='$elem' WHERE wid=2 AND mid=$mid");
   return 1;
 }
@@ -405,12 +409,12 @@ function menu_add_akce($id,$idm) {
   }
   return $ok;
 }
-# ------------------------------------------------------------------------------------ menu del_akce
-# vypustí z menu $idm element akce=$id
-function menu_del_akce($id,$idm) {
+# ------------------------------------------------------------------------------------ menu del_elem
+# vypustí z menu $idm element $elem=$id
+function menu_del_elem($id,$idm,$elem) {
   $elems= select("elem","menu","mid=$idm");
   $elems= explode(';',$elems);
-  $elems= array_diff($elems,array("akce=$id"));
+  $elems= array_diff($elems,array("$elem=$id"));
   $elems= implode(';',$elems);
   query("UPDATE menu SET elem='$elems' WHERE mid=$idm");
   return 1;
@@ -693,7 +697,7 @@ function cms_send_potvrzeni($email,$idl,$ida) {
 function feb_mail_send($address,$subject,$body,$reply='') { 
   global $EZER;
   $web_path= $_SESSION['web']['path'];
-  $phpmailer_path= "$web_path/ezer3.1/server/licensed/phpmailer1";
+  $phpmailer_path= "$web_path/ezer3.1/server/licensed/phpmailer";
   $_SESSION['trace']['feb_mail_send-1']= $phpmailer_path;
   $_SESSION['trace']['feb_mail_send-2']= file_exists("$web_path/ezer3.1/server/licensed/phpmailer") ? 1 : 0;
   $_SESSION['trace']['feb_mail_send-3']= file_exists($phpmailer_path) ? 1 : 0;
@@ -719,7 +723,12 @@ function feb_mail_send($address,$subject,$body,$reply='') {
     // zpětné adresy
     $mail->ClearReplyTos();
     $mail->AddReplyTo($reply ? $reply : $EZER->CMS->GMAIL->mail);
-    $mail->SetFrom($EZER->CMS->GMAIL->mail, $EZER->CMS->GMAIL->name);
+    if (method_exists('PHPMailer','SetFrom'))
+      $mail->SetFrom($EZER->CMS->GMAIL->mail, $EZER->CMS->GMAIL->name);
+    else {
+      $mail->From= $EZER->CMS->GMAIL->mail;
+      $mail->FromName= $EZER->CMS->GMAIL->name;
+    }
     // vygenerování mailu
     $mail->Subject= $subject;
     $mail->Body= $body;

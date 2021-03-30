@@ -107,7 +107,7 @@ div.body .dole .menu {
   width: 240px;
   display: table-cell;
   vertical-align: top;
-  background: white url('menu_bg.png');
+  background: white url('./menu_bg.png');
   background-repeat: repeat-y;
 }
 body.body .dole .menu ul,
@@ -159,11 +159,16 @@ div.body .dole .obsah {
   display: table-cell;
   padding: 10px 10px 0 0;
 }
+body.body .dole .obsah .text,
+div.body .dole .obsah .text {
+  border-bottom: 6px solid #900;
+  min-height: 50px;
+}
 body.body .dole .obsah span.cms_form,
 div.body .dole .obsah span.cms_form {
   float: right;
   display: inline-block;
-  border-radius: .4em;
+  border-radius: 0.4em;
   padding: 0.1em 0.6em;
   font-weight: bold;
   text-decoration: none;

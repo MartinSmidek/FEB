@@ -14,9 +14,9 @@
   $app_name=  'evangelizační buňky';
   $app_root=  'feb';
   $skin=      'ck';
-  $app_js=    array("/feb/feb_fce.js","/$kernel/client/ezer_cms3.js");
-  $app_css=   array("/feb/css/feb.css","/feb/css/edit.css",
-                    "/$kernel/client/ezer_cms3.css","/$kernel/client/wiki.css");
+  $app_js=    array("feb/feb_fce.js","$kernel/client/ezer_cms3.js");
+  $app_css=   array("feb/css/feb.css","feb/css/edit.css",
+                    "$kernel/client/ezer_cms3.css","$kernel/client/wiki.css");
 
   // cesty
   $abs_roots= array("C:/Ezer/beans/feb","/home/users/gandi/evangelizacnibunky.cz/web");
