@@ -16,7 +16,7 @@
         'GMAIL'=>(object)array(
           /// přístup na použitý gmail
           'mail'=>'web.evangelizacni.bunky@gmail.com',
-          'pswd'=>'MeditacniZahrada',
+          'pswd'=>'MeditacniZahrada',                   // POZOR musí být i v číselníku smtp_srv !!!
           'name'=>'Farní evangelizační buňky'
         ),
         'FORM'=>array(

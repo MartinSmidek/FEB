@@ -207,7 +207,7 @@ function eval_elem($desc) {
   $edit_id= 0;
   $elems= explode(';',$desc);
   $html= '';
-//  $html= $CMS ? "<script>skup_mapka_off();</script>" : '';
+  $html= $CMS ? "<script>skup_mapka_off();</script>" : '';
   foreach ($elems as $elem) {
     list($typ,$ids)= explode('=',$elem.'=');
     // přemapování ids podle server/localhost
@@ -261,13 +261,14 @@ function eval_elem($desc) {
       $html.= "<div id='clanek$id' class='text'$menu>$web_text</div>";
       break;
 
-//    case 'mapa':    # ------------------------------------------------ . mapa
-//      global $CMS;
-//      $load_ezer= true;
-//      $html.= !$CMS ? '' : <<<__EOT
-//        <script>skup_mapka();</script>
-//__EOT;
-//      break;
+    case 'mapa':    # ------------------------------------------------ . mapa
+      global $CMS;
+      $load_ezer= !$CMS;
+      $html.= 
+        "<script>skup_mapka();</script>
+         <div id='mapa'>MAPA</div>
+         <div id='popis'></div>";
+      break;
 
     }
   }
@@ -275,10 +276,42 @@ function eval_elem($desc) {
 }
 # -------------------------------------------------------------------------------------==> show_page
 function show_page($html,$full_page=0) {
-  global $CMS, $index, $mainmenu;
+  global $CMS, $index, $mainmenu, $load_ezer;
   $url= '';
 //  $url= "<div>{$_SERVER['REQUEST_URI']} --- ".(isset($_GET['page']) ? "page={$_GET['page']}" : '')."</div>";
   
+  // definice do <HEAD>
+  
+  // jádro Ezer - jen pokud není aktivní CMS
+  $script= '';
+  $client= "./ezer3.1/client";
+  // pokud není CMS nebude uživatel přihlášen - vstup do Ezer je přes _oninit
+  $script.= $CMS ? '' : <<<__EOJ
+    <script type="text/javascript">
+      var Ezer= {};
+      Ezer.get= { dbg:'1',err:'1',gmap:'1' };
+      Ezer.web= {index:'index.php'};
+      Ezer.fce= {};
+      Ezer.str= {};
+      Ezer.obj= {};
+      Ezer.version= 'ezer3.1'; Ezer.root= 'man'; Ezer.app_root= 'man'; 
+      Ezer.options= {
+        _oninit: 'skup_mapka',
+        skin: 'db'
+      };
+    </script>
+__EOJ;
+
+  // gmaps
+  $api_key= "AIzaSyAq3lB8XoGrcpbCKjWr8hJijuDYzWzImXo"; // Google Maps JavaScript API 'answer-test'
+  $script.= !$load_ezer ? '' : <<<__EOJ
+    <script src="https://maps.googleapis.com/maps/api/js?libraries=places&key=$api_key"></script>
+    <script src="/feb/web_fce.js" type="text/javascript" charset="utf-8"></script>
+    <script src="$client/ezer_app3.js"  type="text/javascript" charset="utf-8"></script>
+    <script src="$client/ezer3.js"      type="text/javascript" charset="utf-8"></script>
+    <script src="$client/ezer_lib3.js"  type="text/javascript" charset="utf-8"></script>
+__EOJ;
+
   // vytvoření menu
   $menu= "<ul>";
   foreach ($mainmenu as $m) {
@@ -362,13 +395,9 @@ __EOD;
       <link href="/$kernel/client/licensed/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
       <link rel="shortcut icon" href="/feb/img/feb.png">
       <script src="/feb/jquery-3.2.1.min.js" type="text/javascript" charset="utf-8"></script>
+      <script src="$client/licensed/jquery-ui.min.js" type="text/javascript" charset="utf-8"></script>
       <script src="/$kernel/client/ezer_cms3.js" type="text/javascript" charset="utf-8"></script>
-      <script type="text/javascript">
-        var Ezer= {
-          web: {index:'$index'},
-          cms: {form:{}}
-        };
-      </script>
+      $script
       <title>Farní Evangelizační buňky</title>
     </head>
 __EOD;
@@ -625,46 +654,29 @@ function menu_tree($wid) {
 # funkce na serveru přes AJAX
 # --------------------------------------------------------------------------------------- ask server
 function ask_server($x) {
-//  global $y, $trace;
+  global $z, $trace;
   switch ( $x->cmd ) {
-//
-//  case 'send_pin': // ------------------------------------------------------------------ send pin
-//    // ask({cmd:'send_pin',mail:mail} ...
-//    $y->ok= emailIsValid($x->mail,$err) ? 1 : 0;
-//    if ( $y->ok ) {
-//      // vytvoř pin a zapiš do session
-//      $pin= $_SESSION['feb']['pin']= rand(1000,9999);
-//      // odeslání mailu
-//      $ret= mail_send('answer@setkani.org', $x->mail, "Přihlášení na $x->akce", 
-//          "Pokud jste žádal(a) o přihlášení na seminář, 
-//          napište prosím vedle svojí mailové adresy $pin a použijte znovu tlačítko Odeslat.
-//          <br>Pokud se jedná o omyl, pak prosím tento mail ignorujte.");
-//      if ( $ret->msg ) {
-//        $y->state = 'err';
-//        $y->txt .= "Lituji, mail se nepovedlo odeslat ($ret->msg)";
-//        goto end;
-//      }
-//      $y->state = 'wait'; // čekáme na zadání PINu z mailu
-//    }
-//    else {
-//      $y->txt= "'$x->to' nevypadá jako mailová adresa ($err)";
-//    }
-//    break;
-//
-//  case 'seek_db': // -------------------------------------------------------------------- seek db
-//    $y->id= 0;
-//    connect();
-//    $ra= mysql_query("SELECT id_lidi,pin,prijmeni,jmeno,telefon,ulice,psc,obec
-//                      FROM lidi WHERE mail='$x->mail' ");
-//    if ( $ra && $f= mysql_fetch_object($ra) ) ;
-//    if ( $f->id_lidi ) {
-//      // navrať osobní data 
-//      $y->id= $f->id_lidi;
-//      $y->pin= $f->pin;
-//      $y->db= $f;
-//    } 
-//    break;
-//
+    case 'mapa':
+      // získej polohu buněk
+      $names= $notes= array();
+      $rb= pdo_query("SELECT f.psc,c.nazev 
+        FROM cell AS c JOIN ve USING (id_cell) JOIN fara AS f USING (id_fara)");
+      while ($rb && (list($psc,$nazev)= pdo_fetch_row($rb))) {
+        if (!isset($names[$psc])) {
+          $notes[$psc]= 1;
+          $names[$psc]= $nazev;
+        }
+        else {
+          $notes[$psc]++;
+          $names[$psc].= " a $nazev";
+        }
+      }
+      foreach ($notes as $i=>$note) {
+        $notes[$i]= $note>1 ? "$note buňky " : 'buňka ';
+      }
+      $z->mapa= map_show($names,$notes,0,"/feb/img/feb-logo.png");
+      $z->trace= $trace;
+      break;
   }
 end:
   return 1;
@@ -767,5 +779,59 @@ function feb_mail_send($address,$subject,$body,$reply='') {
 //    $ret->ok= $e;
 //    $ret->ok= 0;
 //  }
+  return $ret;
+}
+/** ==========================================================================================> MAPA */
+# -----------------------------------------------------------------------------------==> .. map show
+# vrátí strukturu pro gmap
+# icon = CIRCLE[,scale:1-10][,ontop:1]|cesta k bitmapě nebo pole psc->icon
+function map_show($names,$notes,$names_as_id=0,$icon='') {
+//                                                debug($names,"mapa2_psc");
+  // k PSČ zjistíme LAN,LNG
+  $ret= (object)array('mark'=>'','n'=>0);
+  $ic= '';
+  if ( $icon ) {
+    if ( !is_array($icon) )
+      $ic=",$icon";
+  }
+  $marks= $err= '';
+  $mis_psc= array();
+  $err_psc= array();
+  $chybi= array();
+  $n= 0; $del= '';
+  foreach ($names as $p=>$tit) {
+    $p= trim($p);
+    if ( preg_match('/\d\d\d\d\d/',$p) ) {
+      $qs= "SELECT psc,lat,lng FROM psc_axy WHERE psc='$p'";
+      $rs= pdo_qry($qs);
+      if ( $rs && ($s= pdo_fetch_object($rs)) ) {
+        $n++;
+        $title= $notes[$p].'<br>'.str_replace(' a ','<br>',$tit);
+        $title= str_replace(',',' ',$title);
+        if ( is_array($icon) )
+          $ic= ",{$icon[$p]}";
+        $marks.= "{$del}$n,{$s->lat},{$s->lng},$title$ic"; $del= ';';
+      }
+      else {
+        $err_psc[$p].= " $p";
+        if ( !in_array($p,$chybi) ) 
+          $chybi[]= $p;
+      }
+    }
+    else {
+      $mis_psc[$p].= " $p";
+    }
+  }
+  // zjištění chyb
+  if ( count($err_psc) || count($mis_psc) ) {
+    if ( ($ne= count($mis_psc)) ) {
+      $err= "$ne PSČ chybí nebo má špatný formát. Týká se to: ".implode(' a ',$mis_psc);
+    }
+    if ( ($ne= count($err_psc)) ) {
+      $err.= "<br>$ne PSČ se nepovedlo lokalizovat. Týká se to: ".implode(' a ',$err_psc);
+    }
+  }
+  $ret= (object)array('mark'=>$marks,'n'=>$n,'err'=>$err,'chybi'=>$chybi);
+//                                                    debug($chybi,"chybějící PSČ");
   return $ret;
 }

@@ -1,4 +1,27 @@
-<?php # (c) 2017 Martin Smidek <martin@smidek.eu>
+<?php # (c) 2017-2021 Martin Smidek <martin@smidek.eu>
+/** =========================================================================================> TABLE */
+# zobrazované tabulky >* je označuje klíč, >tab ozančuje klíč jiné tabulky
+$app_tables= (object)array(
+  'menu'    => "mid>*,mid_top>menu,mid_sub>menu,nazev,elem>;",
+  'clanek'  => "id_clanek>*,web_text",
+  'cell'    => "id_cell>*,nazev,stav",
+  'fara'    => "id_fara>*,nazev,ulice,obec,psc",
+  '_' => 'syst.DATA,systable' // cesta k funkci tab_append, css tabulky
+);
+# --------------------------------------------------------------------------------------- man append
+# zobraz záznam referovaný daným elementem
+function man_append($table,$elem) {
+  global $app_tables;
+  $html= '';
+  // rozeber element
+  list($name,$value)= explode('=',trim($elem,' -'));
+  switch ($name) {
+    case 'clanek':
+      $html.= tab_append('clanek',"id_clanek='$value'");
+      break;
+  }
+  return $html;
+}
 /** =========================================================================================> MAILY */
 # --------------------------------------------------------------------------- feb pack_menit_lidi_12
 # přidat adresáty z jiné tabulky

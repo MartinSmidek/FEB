@@ -308,6 +308,24 @@ div.stat dt {
 div.cms_form {
   top: 5px !important;
 }
+#mapa {
+  position: absolute;
+  overflow: hidden;
+  width: 660px;
+  height: 100%;
+}
+#popis {
+  position: absolute;
+  display: none;
+  overflow: hidden;
+  z-index: 5;
+  width: 200px;
+  height: 100px;
+  background: white;
+  margin: 5px;
+  padding: 5px;
+  box-shadow: -1px 1px 0px #567, 1px -1px 0px #567, -1px -1px 0px #567, 5px 5px 10px #567;
+}
 body.body,
 div.body {
   height: 100%;

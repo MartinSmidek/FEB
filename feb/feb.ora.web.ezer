@@ -25,7 +25,7 @@ group p {
     c.full= full_page;
     go_menu(last);
   }
-  use w: form _w [0,30,,]
+//  use w: form _w [0,30,,]
 # ----------------------------------------------------------------------------==> emulace událostí
   var page: object // {html,edit,id}
   func cms_go(ref,idm,event) { 

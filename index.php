@@ -40,17 +40,16 @@ require_once("feb/feb.par.php");
 //  $TEST= (object)array('cms'=> 1,'cmd'=>'prihlaska_mail','mail'=>"martin@smidek.eu");
 //}
 if ( isset($TEST) || count($_POST) ) {
-  $y= $TEST ? $TEST : array2object($_POST);
-  if ( $y->cms ) {
-    $ok= cms_server($y);
+  connect();
+  $z= $TEST ? $TEST : array2object($_POST);
+  if ( $z->cms ) {
+    $ok= cms_server($z);
   }
   else {
-    $ok= ask_server($y);
+    $ok= ask_server($z);
   }
   header('Content-type: application/json; charset=UTF-8');
-//  $y->try= 1;
-  $yjson= json_encode($y);
-//  $yjson= "ach jo";
+  $yjson= json_encode($z);
   echo $yjson;
   exit;
 }

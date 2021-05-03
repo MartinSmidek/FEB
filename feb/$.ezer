@@ -13,15 +13,46 @@ menu feb { title:'feb', type:'main', active:*, _sys:'*'
     panel pers {type:'right', title:'Osobní nastavení', _sys:'*', include:'onload,ezer2.pers'}
     # ===================================================================================== DATABÁZE
     panel DATA {type:'right', title:'[fa-database] Struktura dat'
-      use info: form right [12,4,,]
+      use info: form right [12,4,,] {
+        select tab [-253,5,150,] {tag:'t', title:'tabulka', format:'t'}
+        field idt [-152,5,70,] {tag:'t', title:'klíč', format:'t'}
+        button [-82,5,,] {tag:'t', title:'zobraz'
+          func onclick() {
+            clear(); form.note= conc(form.note,php.tab_append(tab,`*='${idt}'`)); // * bude primary_key
+        }}
+        button [-22,5,,] {tag:'t', title:'vymaž'
+          func onclick() { form.note= '';
+        }}
+      }
+      func tab_append(tab,cond,mode) {
+        clear();
+        if (mode==1)
+          info.append(php.tab_append_using(tab,cond));
+        elseif (mode==2)
+          info.append(php.tab_append(tab,`TRUE`));
+        elseif (mode==3)
+          info.append(php.man_append(tab,cond));
+        else // mode==0
+          info.append(php.tab_append(tab,cond));
+      }
       menu {type:'left', active:*
         menu  {title:'Struktura dat (výběr)', type:'group'
           item {title:'[fa-object-group] Přehled struktury dat'
             proc onclick (i) {
+              info.display(0,'t');
               info.fill(replace_fa(conc(i.owner.title,' - ',i.title)),"<br>
                 Zjednodušené schema databáze pro <b>FEB</b><br><br>
                 <img src='feb/img/schema_db_feb_2020.png' />
               ");
+            }
+          }
+          item {title:'[fa-question] zobrazení záznamů'
+            func onclick (i:ezer) { var tab_key:number
+              clear(); info.display(1,'t');
+              info.fill(replace_fa(i.title),'');
+              info.tab.selects(php.tab_selects());
+              tab_key= info.tab.key();
+              if (!tab_key) info.tab.key(1);
             }
           }
           item {title:'[fa-database] entita L-LIDI'     par:°{tab:'lidi'} }
@@ -37,9 +68,9 @@ menu feb { title:'feb', type:'main', active:*, _sys:'*'
           item {title:'[fa-database] web MENU'          par:°{tab:'menu'} }
           item {title:'[fa-database] web CLANEK'        par:°{tab:'clanek'} }
           proc onclick (i) {
-            clear;
+            clear; info.display(0,'t');
             info.fill(replace_fa(conc(i.owner.title,' - ',i.title)),
-                ask('i_doc_table_struct',i.par.tab,0,'struc'));
+                ask('i_doc_table_struct',i.par.tab,0,'systable'));
           }
         }
       }
