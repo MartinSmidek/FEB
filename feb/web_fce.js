@@ -70,27 +70,9 @@ function skup_mapka_off() {
 // ------------------------------------------------------------------------------------- skup dialog
 function skup_dialog(mark) {
   var mark_json= JSON.stringify({id:mark.id,title:mark.title});
-//  jQuery('#skup0').css({display:'none'});
-//  jQuery('#skup2').css({display:'none'});
   jQuery('#popis').css({display:'block'}).html(
     mark.title
-//    mark.title+"<div><a class='jump' onclick='skup_dialog2("+mark_json+");'> \
-//    <span>Chci se zeptat organizátorů</span></a></div>"
   );
-}
-// ------------------------------------------------------------------------------------- skup dialog
-function skup_dialog2(mark) {
-//  jQuery('#skup1').css({display:'none'});
-//  jQuery('#skup2').css({display:'block'}).html(
-//      mark.title
-//    + "<div>"
-//    + "  <input class='skup_x' type='text' id='skup_from' placeholder='tvůj email'>"
-//    + "  <textarea class='skup_x' id='skup_body' placeholder='dotaz na organizátory'></textarea>"
-//    + "<a class='skup_x jump' onclick=\"skup_sendmail('"+mark.id+"','"+mark.title+"');\">Poslat mail</a>"
-//    + "<a class='skup_x jump' onclick=\"jQuery('#skup2').css({display:'none'});\">Zpět</a>"
-//    + "<div id='skup_msg'></div>"
-//    + "</div>"
-//  );
 }
 // ===========================================================================================> AJAX
 // --------------------------------------------------------------------------------------------- ask

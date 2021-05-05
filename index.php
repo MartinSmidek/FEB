@@ -39,6 +39,9 @@ require_once("feb/feb.par.php");
 //if ( isset($_GET['mail']) && $_GET['mail']=='me' ) {
 //  $TEST= (object)array('cms'=> 1,'cmd'=>'prihlaska_mail','mail'=>"martin@smidek.eu");
 //}
+if ( isset($_GET['mapa']) ) {
+  $TEST= (object)array('cmd'=>'mapa');
+}
 if ( isset($TEST) || count($_POST) ) {
   connect();
   $z= $TEST ? $TEST : array2object($_POST);
@@ -83,7 +86,7 @@ $fe_level= isset($_SESSION['web']['fe_level']) ? $_SESSION['web']['fe_level'] : 
       "C:/Ezer/beans/feb",
       "/home/users/gandi/evangelizacnibunky.cz/web"
   )[$ezer_server];
-  global $CMS;
+  global $CMS, $load_ezer;
   $CMS= 0;
   //require_once("man/2template_ch.php");
   //require_once("man/2mini.php");

@@ -394,9 +394,11 @@ panel FARY [0,0,327,220] { title:' Číselník farností', type:'popup', style:'
     view cf: table _fary
     browse lst [0,0,,] { rows:10, qry_rows:1
       show ulice { data:cf.ulice }
-      show psc { data:cf.psc }
-      show nazev [,,150,] { title:'název', data:cf.nazev, format:'ts+q*' }
+      show telefony {data:cf.telefony}
+      show email {data:cf.email}
+      show nazev [,,110,] { title:'název', data:cf.nazev, format:'ts+q*' }
       show obec [,,150,] { title:'obec', data:cf.obec, format:'tsq*' }
+      show psc [,,40,] { title:'PSČ', data:cf.psc, format:'tsq*'  }
       proc onrowclick() { 
         copy_by_name(lst,goal);
       }
@@ -440,6 +442,8 @@ table fara { key_id:'id_fara'
   text ulice { help:'ulice|fara - ulice, č.p.' }
   text psc { help:'psč|fara - psč' }
   text obec { help:'obec|fara - obec' }
+  text telefony { help:'telefony|fara - telefon' }
+  text email { help:'email|fara - email' }
 }
 table cell { key_id:'id_cell'
   number id_cell
@@ -524,6 +528,8 @@ table _fary { key_id:'id_fary'
   text ulice { help:'ulice|fara - ulice, č.p.' }
   text psc { help:'psč|fara - psč' }
   text obec { help:'obec|fara - obec' }
+  text telefony { help:'telefony|fara - telefon' }
+  text email { help:'email|fara - email' }
 }
 map cis_stat:     table _cis {where:"druh='stat'"     order:'poradi' key_id:'data'}
 map map_smtp_srv: table _cis {where:"druh='smtp_srv'" order:'poradi' key_id:'data'}

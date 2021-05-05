@@ -22,6 +22,13 @@ function man_append($table,$elem) {
   }
   return $html;
 }
+/** ==========================================================================================> FARY */
+# ------------------------------------------------------------------------------------- feb test_psc
+# zkotroluj, zda známe polohu fary - zatím podle PSČ
+function feb_test_psc($psc) {
+  $geo= select('lng','psc_axy',"psc='$psc'");
+  return $geo ? 1 : 0;
+}
 /** =========================================================================================> MAILY */
 # --------------------------------------------------------------------------- feb pack_menit_lidi_12
 # přidat adresáty z jiné tabulky
@@ -31,7 +38,7 @@ function feb_pack_menit_lidi_12($idp,$on,$rel,$tab,$id_tab) {
   $difs+= feb_pack_menit($idp,$on,$rl);
   return $difs;
 }
-# --------------------------------------------------------------------------- feb pack_menit_lidi_3
+# ---------------------------------------------------------------------------- feb pack_menit_lidi_3
 # přidat adresáty z jiné tabulky
 function feb_pack_menit_lidi_3($idp,$on,$kneze,$vedouci,$cleny) {
   $difs= 0;

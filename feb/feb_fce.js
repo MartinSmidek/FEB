@@ -106,29 +106,29 @@ function zrusit(_id,_idm) {
   return 1;
 }
 // ===========================================================================================> AJAX
-// ------------------------------------------------------------------------------------------- error
-function error(x) {
-  alert(x);
-}
-// --------------------------------------------------------------------------------------------- ask
-// ask(x,then): dotaz na server se jménem funkce po dokončení
-function ask(x,then,arg) {
-  var xx= x;
-  jQuery.ajax({url:'index.php', data:x, method: 'POST',
-    success: function(y) {
-      if ( typeof(y)==='string' )
-        error(`Došlo k chybě 1 v komunikaci se serverem - '${xx.cmd}'`);
-      else if ( y.error )
-        error(`Došlo k chybě 2 v komunikaci se serverem - 'y.error'`);
-      else if ( then ) {
-        then.apply(undefined,[y,arg]);
-      }
-    },
-    error: function(xhr) {
-      error("Došlo k chybě 3 v komunikaci se serverem");
-    }
-  })
-}
+//// ------------------------------------------------------------------------------------------- error
+//function error(x) {
+//  alert(x);
+//}
+//// --------------------------------------------------------------------------------------------- ask
+//// ask(x,then): dotaz na server se jménem funkce po dokončení
+//function ask(x,then,arg) {
+//  var xx= x;
+//  jQuery.ajax({url:'index.php', data:x, method: 'POST',
+//    success: function(y) {
+//      if ( typeof(y)==='string' )
+//        error(`Došlo k chybě 1 v komunikaci se serverem - '${xx.cmd}'`);
+//      else if ( y.error )
+//        error(`Došlo k chybě 2 v komunikaci se serverem - 'y.error'`);
+//      else if ( then ) {
+//        then.apply(undefined,[y,arg]);
+//      }
+//    },
+//    error: function(xhr) {
+//      error("Došlo k chybě 3 v komunikaci se serverem");
+//    }
+//  })
+//}
 // -------------------------------------------------------------------------------------==> CKEditor
 CKEDITOR.plugins.add('ezer', {
   requires: 'widget,filetools',

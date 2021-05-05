@@ -62,6 +62,8 @@
     }"
   );
   // je to standardní aplikace se startem v kořenu
+//  $api_key= "AIzaSyCUxpFqLlYPHFzwY63mVcmFcFgF4TYfzyQ"; // Google Maps JavaScript API 'EvangeliacniBunky'
+  $api_key= "AIzaSyAq3lB8XoGrcpbCKjWr8hJijuDYzWzImXo"; // Google Maps JavaScript API 'answer-test'
   require_once("$kernel/ezer_main.php");
 
 ?>

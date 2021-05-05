@@ -262,8 +262,7 @@ function eval_elem($desc) {
       break;
 
     case 'mapa':    # ------------------------------------------------ . mapa
-      global $CMS;
-      $load_ezer= !$CMS;
+      $load_ezer= $CMS ? 0 : 1;
       $html.= 
         "<script>skup_mapka();</script>
          <div id='mapa'>MAPA</div>
@@ -295,7 +294,7 @@ function show_page($html,$full_page=0) {
       Ezer.str= {};
       Ezer.obj= {};
       Ezer.version= 'ezer3.1'; Ezer.root= 'man'; Ezer.app_root= 'man'; 
-      Ezer.options= {
+      Ezer.options= { /* load_ezer=$load_ezer */
         _oninit: 'skup_mapka',
         skin: 'db'
       };
@@ -303,6 +302,8 @@ function show_page($html,$full_page=0) {
 __EOJ;
 
   // gmaps
+  $api_key= "AIzaSyC5Npr91tYnEh1fbewmrMyhxyFuGq61I54";
+  $api_key= "AIzaSyCUxpFqLlYPHFzwY63mVcmFcFgF4TYfzyQ"; // Google Maps JavaScript API 'EvangeliacniBunky'
   $api_key= "AIzaSyAq3lB8XoGrcpbCKjWr8hJijuDYzWzImXo"; // Google Maps JavaScript API 'answer-test'
   $script.= !$load_ezer ? '' : <<<__EOJ
     <script src="https://maps.googleapis.com/maps/api/js?libraries=places&key=$api_key"></script>
@@ -658,10 +659,11 @@ function ask_server($x) {
   switch ( $x->cmd ) {
     case 'mapa':
       // získej polohu buněk
-      $names= $notes= array();
-      $rb= pdo_query("SELECT f.psc,c.nazev 
+      $names= $notes= $fara= array();
+      $rb= pdo_query("SELECT TRIM(f.psc),c.nazev,f.obec,f.ulice 
         FROM cell AS c JOIN ve USING (id_cell) JOIN fara AS f USING (id_fara)");
-      while ($rb && (list($psc,$nazev)= pdo_fetch_row($rb))) {
+      while ($rb && (list($psc,$nazev,$obec,$ulice)= pdo_fetch_row($rb))) {
+        $fara[$psc]= "$obec $ulice";
         if (!isset($names[$psc])) {
           $notes[$psc]= 1;
           $names[$psc]= $nazev;
@@ -671,10 +673,45 @@ function ask_server($x) {
           $names[$psc].= " a $nazev";
         }
       }
-      foreach ($notes as $i=>$note) {
-        $notes[$i]= $note>1 ? "$note buňky " : 'buňka ';
+      $marks= $err= '';
+      $mis_psc= array();
+      $err_psc= array();
+      $chybi= array();
+      $n= 0; $del= '';
+      $icon= "/feb/img/feb-logo.png";
+      foreach ($notes as $psc=>$note) {
+        $notes[$psc]= $note>1 ? "$note buňky " : 'buňka ';
+        if ( preg_match('/\d\d\d\d\d/',$psc) ) {
+          $qs= "SELECT psc,lat,lng FROM psc_axy WHERE psc='$psc'";
+          $rs= pdo_qry($qs);
+          if ( $rs && ($s= pdo_fetch_object($rs)) ) {
+            $n++;
+            $title= $notes[$psc].'<br>'.str_replace(' a ','<br>',$names[$psc])
+                ."<br>ve farnosti<br>$fara[$psc]";
+            $title= str_replace(',',' ',$title);
+            $marks.= "{$del}$n,{$s->lat},{$s->lng},$title,$icon"; $del= ';';
+          }
+          else {
+            $err_psc[$psc].= " $psc";
+            if ( !in_array($psc,$chybi) ) 
+              $chybi[]= $psc;
+          }
+        }
+        else {
+          $mis_psc[$psc].= " $psc";
+        }
       }
-      $z->mapa= map_show($names,$notes,0,"/feb/img/feb-logo.png");
+      // zjištění chyb
+      if ( count($err_psc) || count($mis_psc) ) {
+        if ( ($ne= count($mis_psc)) ) {
+          $err= "$ne PSČ chybí nebo má špatný formát. Týká se to: ".implode(' a ',$mis_psc);
+        }
+        if ( ($ne= count($err_psc)) ) {
+          $err.= "<br>$ne PSČ se nepovedlo lokalizovat. Týká se to: ".implode(' a ',$err_psc);
+        }
+      }
+      // předej výsledek
+      $z->mapa= (object)array('mark'=>$marks,'n'=>$n,'err'=>$err,'chybi'=>$chybi);
       $z->trace= $trace;
       break;
   }
