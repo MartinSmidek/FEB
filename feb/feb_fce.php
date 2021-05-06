@@ -22,12 +22,47 @@ function man_append($table,$elem) {
   }
   return $html;
 }
-/** ==========================================================================================> FARY */
+/** ==========================================================================================> MAPY */
 # ------------------------------------------------------------------------------------- feb test_psc
 # zkotroluj, zda známe polohu fary - zatím podle PSČ
 function feb_test_psc($psc) {
   $geo= select('lng','psc_axy',"psc='$psc'");
   return $geo ? 1 : 0;
+}
+# ------------------------------------------------------------------------------------- geo_get_smap
+# zjistí polohu podle tabulky _geo
+# chybějící údaje doplní ze služby mapy.cz
+# vrací {id_geo,lat,lng,ok) 
+#     kde ok=0 pro neznámou adresu, ok=1 je nově detekovaná adresa a ok=2 je dříve zapamatovaná
+function geo_mapy_cz($ulice,$obec) {  trace();
+  $geo= (object)array('id_geo'=>0,'lat'=>0,'lng'=>0,'ok'=>0);
+  $adresa= "$ulice,$obec";
+  // zkusíme najít v tabulce _geo
+  list($geo->id_geo,$geo->lat,$geo->lng)= select('id_geo,lat,lng','_geo',"adresa='$adresa'");
+  if ($geo->id_geo) {
+    $geo->ok= 2;
+    goto end;
+  }
+  $address= urlencode($adresa);
+  $xml= file_get_contents("http://api4.mapy.cz/geocode?query=$address");
+  if ( !$xml ) goto end;
+  $p= xml_parser_create();
+  $vals= $index= null;
+  xml_parse_into_struct($p, $xml, $vals, $index);
+  xml_parser_free($p);
+//                                                       debug($vals[2],"XML");
+  if ( $vals[2]['tag']=='ITEM' ) {
+    $item= $vals[2]['attributes'];
+    $geo->lat= $item['Y'];
+    $geo->lng= $item['X'];
+    $geo->ok= 1;
+    // zápis do _geo
+    query("INSERT INTO _geo (adresa,lat,lng,zdroj) VALUES ('$adresa',$geo->lat,$geo->lng,'S')");
+    $geo->id_geo= pdo_insert_id();
+  }
+end:
+                                                        debug($geo,"");
+  return $geo;
 }
 /** =========================================================================================> MAILY */
 # --------------------------------------------------------------------------- feb pack_menit_lidi_12

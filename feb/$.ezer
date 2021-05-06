@@ -393,6 +393,8 @@ panel FARY [0,0,327,220] { title:' Číselník farností', type:'popup', style:'
   form _f {
     view cf: table _fary
     browse lst [0,0,,] { rows:10, qry_rows:1
+      show id_fary { data:cf.id_fary }
+      show id_geo { data:cf.id_geo }
       show ulice { data:cf.ulice }
       show telefony {data:cf.telefony}
       show email {data:cf.email}
@@ -402,7 +404,18 @@ panel FARY [0,0,327,220] { title:' Číselník farností', type:'popup', style:'
       proc onrowclick() { 
         copy_by_name(lst,goal);
       }
-      proc onsubmit() { panel.hide(1); }
+      func onsubmit() { var geo:object
+        if (!id_geo) {
+          geo= php.geo_mapy_cz(ulice,obec);
+          if (geo.id_geo) {
+            id_geo.let(geo.id_geo);
+            php.query(`UPDATE _fary SET id_geo=${geo.id_geo} WHERE id_fary=${id_fary}`);
+          }
+          else
+            warning(`adresu '${ulice},${obec}' mapy.cz nepoznaly`);
+        }
+        panel.hide(1); 
+      }
     }
   }
 }
@@ -438,6 +451,7 @@ table lidi { key_id:'id_lidi'
 }
 table fara { key_id:'id_fara'
   number id_fara
+  number id_geo // poloha
   text nazev  { help:'název' }
   text ulice { help:'ulice|fara - ulice, č.p.' }
   text psc { help:'psč|fara - psč' }
@@ -522,8 +536,16 @@ table _cis { key_id:'id_cis'
   number id_cis text druh, text data, text zkratka, number poradi,
   text hodnota, text popis, text barva, text ikona
 }
+table _geo { key_id:'id_geo'
+  number id_geo 
+  text adresa  // ulice, obec
+  number lat
+  number lng
+  text zdroj // S|G
+}
 table _fary { key_id:'id_fary'
   number id_fary
+  number id_geo // poloha
   text nazev  { help:'název' }
   text ulice { help:'ulice|fara - ulice, č.p.' }
   text psc { help:'psč|fara - psč' }

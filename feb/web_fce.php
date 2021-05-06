@@ -290,6 +290,7 @@ function show_page($html,$full_page=0) {
       var Ezer= {};
       Ezer.get= { dbg:'1',err:'1',gmap:'1' };
       Ezer.web= {index:'index.php'};
+      Ezer.cms= {form:{}};
       Ezer.fce= {};
       Ezer.str= {};
       Ezer.obj= {};
