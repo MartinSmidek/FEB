@@ -653,9 +653,10 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
       show idc { data:v.id_cell }
       show ulice { data:f.ulice }
       show nazev { data:f.nazev }
+      show obec { data:f.obec }
       show telefony { data:f.telefony }
       show email { data:f.email }
-      show obec  [,,110,] { title:'obec', data:f.obec, format:'ts+q*' }
+      show nazev_obec  [,,110,] { title:'název obec', expr:"CONCAT(f.nazev,' ',f.obec)", format:'ts+q*' }
       show psc   [,,40,] { title:'psc', data:f.psc, format:'tsq*' }
       proc onchange() {
         this.browse_count | M.Init(); f_fara.Init
@@ -705,18 +706,20 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
       }
     }
     func set_width(w){
-      lst.obec.width(w-lst.psc.width());
+      lst.nazev_obec.width(w-lst.psc.width());
     }
   }
   form _f_fara [,,1,1] { css:'work', style:'overflow:auto'
     // public procedury a proměnné
     func Load(k) { var geo:object
-      form.load(k); cmd_enable(form,'e','s'); 
+      form.load(k); location= 'mapy.cz';
+      cmd_enable(form,'e','s'); 
       if (!id_geo) {
         geo= php.geo_mapy_cz(ulice,obec); 
+        location= geo.zdroj=='S' ? 'mapy.cz' : geo.zdroj;
         if (geo.ok) {
           id_geo= geo.id_geo; 
-          id_geo.change();
+          php.query(`UPDATE fara SET id_geo=${id_geo} WHERE id_fara=${form.key()}`);
         }
       }
     }
@@ -727,33 +730,37 @@ panel bun { type:'plain', title:'[fa-cogs] Databáze', _sys:'*'
     field nazev [10,20,177,] { tag:'N', title:'^název', data:fara.nazev }
     field email [10,55,178,] { tag:'N', title:'^mail', data:fara.email }
     field telefony [10,90,178,] { tag:'N', title:'^telefon', data:fara.telefony }
-    field ulice [205,55,139,] { tag:'N', title:'^ulice', data:fara.ulice }
+    field ulice [205,55,139,] { tag:'N', title:'^ulice', data:fara.ulice 
+      func onchange() { location = '?'; id_geo= 0; id_geo.change() }
+    }
     field psc [205,90,42,] { tag:'N', title:'^PSČ', data:fara.psc, format:'r' }
-    field obec [254,90,191,] { tag:'N', title:'^obec', data:fara.obec }
+    field obec [254,90,191,] { tag:'N', title:'^obec', data:fara.obec 
+      func onchange() { location = '?'; id_geo= 0; id_geo.change() }
+    }
+    // indikace úrovně geo
+    label location [-13,20,40,20] { title:'?', style:'text-align:right' }
     // procedury
     proc onchanged() { on_chng(form); }
     // specifické operace
     label  [5,-5,137,30] { css:'parm' }
     button  [13,-10,,] { tag:'e', title:"[fa-download] přidej ze seznamu",
-      func onclick() { var elem:ezer
-        if (FARY.Show(form)) { 
-          // pokud byla vybrána fara
+      func onclick() { var elem:ezer, idg:number
+        if (FARY.Show(f_fara)) { 
+          idg= id_geo;
+          // pokud byla vybrána fara (pokud byla detekována na mapě je id_geo!=0)
           form.key(0);
           for (elem of form.tagged('N')) {
             elem.change();
           }
+          id_geo= idg;
+          echo(`id_geo=${id_geo}, obec=${obec}`);
+          location= id_geo ? 'mapy.cz' : '?';
         }
       }
     }
-//    button  [13,-10,,] { tag:'e', title:"[fa-download] přidej ze seznamu",proc onclick() { 
-//      FARY.Show(form); 
-//        foreach(form.tagged('N'),do_change)
-//    }}
     // základní operace
     label [-10,-5,226,30] { css:'parm' }
     button [-181,-10,,] { tag:'s', title:"[fa-save] ulož", func onclick() { 
-      if (!php.feb_test_psc(psc))
-        alert(`nevím, kde leží PSČ ${psc} na mapě, prosím o doplnění`);
       do_uloz(form,b_fara.lst) 
     }}
     button [-125,-10,,] { tag:'s', title:"[fa-undo] zpět", proc onclick() { do_zpet(form,b_fara.lst) }}

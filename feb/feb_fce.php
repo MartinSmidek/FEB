@@ -35,11 +35,13 @@ function feb_test_psc($psc) {
 # vrací {id_geo,lat,lng,ok) 
 #     kde ok=0 pro neznámou adresu, ok=1 je nově detekovaná adresa a ok=2 je dříve zapamatovaná
 function geo_mapy_cz($ulice,$obec) {  trace();
-  $geo= (object)array('id_geo'=>0,'lat'=>0,'lng'=>0,'ok'=>0);
+  $geo= (object)array('id_geo'=>0,'lat'=>0,'lng'=>0,'zdroj'=>'kde je?','ok'=>0);
   $adresa= "$ulice,$obec";
   // zkusíme najít v tabulce _geo
-  list($geo->id_geo,$geo->lat,$geo->lng)= select('id_geo,lat,lng','_geo',"adresa='$adresa'");
-  if ($geo->id_geo) {
+  list($id_geo,$lat,$lng,$zdroj)= 
+      select('id_geo,lat,lng,zdroj','_geo',"adresa='$adresa'");
+  if ($id_geo) {
+    $geo->id_geo= $id_geo; $geo->lat= $lat; $geo->lng= $lng; $geo->zdroj= $zdroj;
     $geo->ok= 2;
     goto end;
   }
@@ -50,18 +52,25 @@ function geo_mapy_cz($ulice,$obec) {  trace();
   $vals= $index= null;
   xml_parse_into_struct($p, $xml, $vals, $index);
   xml_parser_free($p);
-//                                                       debug($vals[2],"XML");
-  if ( $vals[2]['tag']=='ITEM' ) {
-    $item= $vals[2]['attributes'];
-    $geo->lat= $item['Y'];
-    $geo->lng= $item['X'];
-    $geo->ok= 1;
-    // zápis do _geo
-    query("INSERT INTO _geo (adresa,lat,lng,zdroj) VALUES ('$adresa',$geo->lat,$geo->lng,'S')");
-    $geo->id_geo= pdo_insert_id();
+                                                       debug($vals,"XML");
+  foreach ($vals as $i=>$val) {
+    if ( $val['tag']=='ITEM' ) {
+      $attr= isset($val['attributes']) ? $val['attributes'] : null;
+      if ($attr && $attr['SOURCE']=='addr') {
+                                                       debug($val,"ITEM[$i]");
+        $geo->lat= $attr['Y'];
+        $geo->lng= $attr['X'];
+        $geo->zdroj= 'S';
+        $geo->ok= 1;
+        // zápis do _geo
+        query("INSERT INTO _geo (adresa,lat,lng,zdroj) VALUES ('$adresa',$geo->lat,$geo->lng,'S')");
+        $geo->id_geo= pdo_insert_id();
+        goto end;
+      }
+    }
   }
 end:
-                                                        debug($geo,"");
+                                                        debug($geo,"$ulice,$obe");
   return $geo;
 }
 /** =========================================================================================> MAILY */

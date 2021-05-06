@@ -1,4 +1,3 @@
-#pragma switch,if
 // ---------------------------------------------------------------------------------------------- //
 // Aplikace pro Farní evangelizační buňky - jednoduché CMS a DBS                                  //
 //                                                                                                //
@@ -386,13 +385,13 @@ panel TISK [,,840,400] { type:'popup', css:'dialog'
 # ----------------------------------------------------------------------------==> FARY
 // číselník farností
 panel FARY [0,0,327,220] { title:' Číselník farností', type:'popup', style:'z-index:2003'
-  var goal:object
-  proc Show(_goal) { goal.set(_goal); panel.modal(22,202) }
-  proc onfirstfocus() { f.lst.browse_load; }
+  var goal:ezer
+  func Show(_goal:ezer) { goal= _goal; panel.modal(22,202) }
+  func onfirstfocus() { f.lst.browse_load(); }
   use f: form _f
   form _f {
     view cf: table _fary
-    browse lst [0,0,,] { rows:10, qry_rows:1
+    browse lst [0,0,,] { rows:8, qry_rows:1
       show id_fary { data:cf.id_fary }
       show id_geo { data:cf.id_geo }
       show ulice { data:cf.ulice }
@@ -401,20 +400,40 @@ panel FARY [0,0,327,220] { title:' Číselník farností', type:'popup', style:'
       show nazev [,,110,] { title:'název', data:cf.nazev, format:'ts+q*' }
       show obec [,,150,] { title:'obec', data:cf.obec, format:'tsq*' }
       show psc [,,40,] { title:'PSČ', data:cf.psc, format:'tsq*'  }
-      proc onrowclick() { 
+      func onrowclick() { 
         copy_by_name(lst,goal);
       }
-      func onsubmit() { var geo:object
-        if (!id_geo) {
-          geo= php.geo_mapy_cz(ulice,obec);
+    }
+    button [10,202,,] {title:"Přidej farnost"
+      func onclick() { var geo:object
+        if (lst.id_geo==0) {
+          geo= php.geo_mapy_cz(lst.ulice,lst.obec);
+          goal.id_geo= geo.id_geo;
           if (geo.id_geo) {
-            id_geo.let(geo.id_geo);
-            php.query(`UPDATE _fary SET id_geo=${geo.id_geo} WHERE id_fary=${id_fary}`);
+            php.query(`UPDATE _fary SET id_geo=${geo.id_geo} WHERE id_fary=${lst.id_fary}`);
           }
           else
-            warning(`adresu '${ulice},${obec}' mapy.cz nepoznaly`);
+            warning(`adresu '${lst.ulice},${lst.obec}' mapy.cz nepoznaly`);
         }
         panel.hide(1); 
+      }
+    }
+    button [140,202,,] {title:"Znají ji mapy.cz?"
+      func onclick() { var geo:object
+        geo= php.geo_mapy_cz(lst.ulice,lst.obec);
+        if (geo.id_geo) {
+          goal.location= 'ok';
+          warning(`ANO adresu '${lst.ulice},${lst.obec}' mapy.cz znají`);
+        }
+        else {
+          goal.location= 'ko';
+          warning(`NE adresu '${lst.ulice},${lst.obec}' mapy.cz nepoznaly`);
+        }
+      }
+    }
+    button [285,202,,] {title:"Zpět"
+      func onclick() {
+          panel.hide(1); 
       }
     }
   }
