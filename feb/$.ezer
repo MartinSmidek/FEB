@@ -36,7 +36,7 @@ menu feb { title:'feb', type:'main', active:*, _sys:'*'
       }
       func append(x) {}
       func man_append(tab,val) { var x:text
-        x= php.man_append(tab,val);
+        x= php.feb_append(tab,val);
         append(x);
       }
     }
