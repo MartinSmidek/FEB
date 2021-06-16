@@ -16,8 +16,11 @@ function man_append($table,$elem) {
   // rozeber element
   list($name,$value)= explode('=',trim($elem,' -'));
   switch ($name) {
-    case 'clanek':
-      $html.= tab_append('clanek',"id_clanek='$value'");
+    case 'akce':
+      $html.= sys_db_append('akce',"id_akce='$value'");
+      break;
+    case 'bunka':
+      $html.= sys_db_append('cell',"id_cell='$value'");
       break;
   }
   return $html;

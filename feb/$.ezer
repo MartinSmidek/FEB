@@ -11,67 +11,33 @@ menu feb { title:'feb', type:'main', active:*, _sys:'*'
   tabs syst {title:"Systém",  include:'onclick,ezer2.syst', _sys:'sys'
     panel pers {type:'right', title:'Osobní nastavení', _sys:'*', include:'onload,ezer2.pers'}
     # ===================================================================================== DATABÁZE
-    panel DATA {type:'right', title:'[fa-database] Struktura dat'
-      use info: form right [12,4,,] {
-        select tab [-253,5,150,] {tag:'t', title:'tabulka', format:'t'}
-        field idt [-152,5,70,] {tag:'t', title:'klíč', format:'t'}
-        button [-82,5,,] {tag:'t', title:'zobraz'
-          func onclick() {
-            clear(); form.note= conc(form.note,php.tab_append(tab,`*='${idt}'`)); // * bude primary_key
-        }}
-        button [-22,5,,] {tag:'t', title:'vymaž'
-          func onclick() { form.note= '';
-        }}
+    panel dat {type:'right', title:'[fa-database] Databáze', _sys:'*', include:'onload,ezer3.db', skill:'a'
+      par:{
+        infos: [
+          {title:'[fa-object-group] Schema databáze',
+           html: "Zjednodušené schema databáze pro <b>FEB</b><br><br>
+                <img src='feb/img/schema_db_feb_2020.png' />"}
+        ],
+        tables: {
+          lidi:   "id_lidi>*,prijmeni|entita L-LIDI",
+          akce:   "id_akce>*,nazev,zacatek|entita A-AKCE",
+          pack:   "id_pack>*,pack_date,pack_subj|entita P-PACK",
+          cell:   "id_cell>*,nazev|entita C-CELL",
+          fara:   "id_fara>*,obec,nazev|entita F-FARA",
+          na:   "id_na>*,id_lidi>lidi,id_akce>akce,poznamka|relace NA:L-A",
+          go:   "id_go>*,id_lidi>lidi,id_pack>pack,msg|relace GO:L-P",
+          ma:   "id_ma>*,id_lidi>lidi,id_cell>cell,poznamka|relace MA:L-C",
+          je:   "id_je>*,id_lidi>lidi,id_fara>fara,funkce|relace JE:L-F",
+          ve:   "id_ve>*,id_cell>cell,id_fara>fara,poznamka|relace VE:C-F",
+          menu:   "mid>*,mid_top>menu,mid_sub>menu,nazev,elem>man_append|web MENU",
+          clanek: "id_clanek>*,web_text"
+        },
+        css: 'systable' // styl tabulek
       }
-      func tab_append(tab,cond,mode) {
-        clear();
-        if (mode==1)
-          info.append(php.tab_append_using(tab,cond));
-        elseif (mode==2)
-          info.append(php.tab_append(tab,`TRUE`));
-        elseif (mode==3)
-          info.append(php.man_append(tab,cond));
-        else // mode==0
-          info.append(php.tab_append(tab,cond));
-      }
-      menu {type:'left', active:*
-        menu  {title:'Struktura dat (výběr)', type:'group'
-          item {title:'[fa-object-group] Přehled struktury dat'
-            proc onclick (i) {
-              info.display(0,'t');
-              info.fill(replace_fa(conc(i.owner.title,' - ',i.title)),"<br>
-                Zjednodušené schema databáze pro <b>FEB</b><br><br>
-                <img src='feb/img/schema_db_feb_2020.png' />
-              ");
-            }
-          }
-          item {title:'[fa-question] zobrazení záznamů'
-            func onclick (i:ezer) { var tab_key:number
-              clear(); info.display(1,'t');
-              info.fill(replace_fa(i.title),'');
-              info.tab.selects(php.tab_selects());
-              tab_key= info.tab.key();
-              if (!tab_key) info.tab.key(1);
-            }
-          }
-          item {title:'[fa-database] entita L-LIDI'     par:°{tab:'lidi'} }
-          item {title:'[fa-database] entita A-AKCE'     par:°{tab:'akce'} }
-          item {title:'[fa-database] entita P-PACK'     par:°{tab:'pack'} }
-          item {title:'[fa-database] entita C-CELL'     par:°{tab:'cell'} }
-          item {title:'[fa-database] entita F-FARA'     par:°{tab:'fara'} }
-          item {title:'[fa-database] relace NA:L-A'     par:°{tab:'na'} }
-          item {title:'[fa-database] relace GO:L-P'     par:°{tab:'go'} }
-          item {title:'[fa-database] relace MA:L-C'     par:°{tab:'ma'} }
-          item {title:'[fa-database] relace JE:L-F'     par:°{tab:'je'} }
-          item {title:'[fa-database] relace VE:C-F'     par:°{tab:'ve'} }
-          item {title:'[fa-database] web MENU'          par:°{tab:'menu'} }
-          item {title:'[fa-database] web CLANEK'        par:°{tab:'clanek'} }
-          proc onclick (i) {
-            clear; info.display(0,'t');
-            info.fill(replace_fa(conc(i.owner.title,' - ',i.title)),
-                ask('i_doc_table_struct',i.par.tab,0,'systable'));
-          }
-        }
+      func append(x) {}
+      func man_append(tab,val) { var x:text
+        x= php.man_append(tab,val);
+        append(x);
       }
     }
   }
