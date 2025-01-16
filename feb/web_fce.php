@@ -294,7 +294,7 @@ function show_page($html,$full_page=0) {
       Ezer.fce= {};
       Ezer.str= {};
       Ezer.obj= {};
-      Ezer.version= 'ezer3.1'; Ezer.root= 'man'; Ezer.app_root= 'man'; 
+      Ezer.version= '3.1'; Ezer.root= 'man'; Ezer.app_root= 'man'; 
       Ezer.options= { /* load_ezer=$load_ezer */
         _oninit: 'skup_mapka',
         skin: 'db'
@@ -710,7 +710,7 @@ function cms_send_potvrzeni($email,$idl,$ida) {
   $body= "Dobrý den, potvrzujeme vaši přihlášku na seminář. 
     <br>Bližší info vám zašleme dva týdny předem.
     <br><br>Přeji vám hezký den.
-    <br>sr. Alžběta, mail: <a href='mailto:$reply'>$reply</a>";
+    <br>Viera Žalúdeková, mail: <a href='mailto:$reply'>$reply</a>";
   $okmsg= cms_mail_send($email,$subj,$body,$reply);
   return $okmsg;    
 }
@@ -730,7 +730,7 @@ function feb_mail_send($address,$subject,$body,$reply='') {
   $_SESSION['trace']['feb_mail_send-1']= $phpmailer_path;
   $_SESSION['trace']['feb_mail_send-2']= file_exists("$web_path/ezer3.1/server/licensed/phpmailer") ? 1 : 0;
   $_SESSION['trace']['feb_mail_send-3']= file_exists($phpmailer_path) ? 1 : 0;
-  $_SESSION['trace']['feb_mail_send-4']= $EZER->CMS->GMAIL;
+  $_SESSION['trace']['feb_mail_send-4']= $EZER->CMS->SEZNAM;
   require_once("$phpmailer_path/class.phpmailer.php");
   require_once("$phpmailer_path/class.smtp.php");
   $ret= (object)array('ok'=>1,'msg'=>'');
@@ -743,20 +743,20 @@ function feb_mail_send($address,$subject,$body,$reply='') {
     $mail->IsSMTP();
     $mail->SMTPAuth = true; // enable SMTP authentication
     $mail->SMTPSecure= "ssl"; // sets the prefix to the server
-    $mail->Host= "smtp.gmail.com"; // sets GMAIL as the SMTP server
-    $mail->Port= 465; // set the SMTP port for the GMAIL server
-    $mail->Username= $EZER->CMS->GMAIL->mail;
-    $mail->Password= $EZER->CMS->GMAIL->pswd;
+    $mail->Host= "smtp.seznam.cz"; // sets SEZNAM as the SMTP server
+    $mail->Port= 465; // set the SMTP port for the SEZNAM server
+    $mail->Username= $EZER->CMS->SEZNAM->mail;
+    $mail->Password= $EZER->CMS->SEZNAM->pswd;
     $mail->CharSet= "UTF-8";
     $mail->IsHTML(true);
     // zpětné adresy
     $mail->ClearReplyTos();
-    $mail->AddReplyTo($reply ? $reply : $EZER->CMS->GMAIL->mail);
+    $mail->AddReplyTo($reply ? $reply : $EZER->CMS->SEZNAM->mail);
     if (method_exists('PHPMailer','SetFrom'))
-      $mail->SetFrom($EZER->CMS->GMAIL->mail, $EZER->CMS->GMAIL->name);
+      $mail->SetFrom($EZER->CMS->SEZNAM->mail, $EZER->CMS->SEZNAM->name);
     else {
-      $mail->From= $EZER->CMS->GMAIL->mail;
-      $mail->FromName= $EZER->CMS->GMAIL->name;
+      $mail->From= $EZER->CMS->SEZNAM->mail;
+      $mail->FromName= $EZER->CMS->SEZNAM->name;
     }
     // vygenerování mailu
     $mail->Subject= $subject;
