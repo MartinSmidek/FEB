@@ -13,9 +13,10 @@
         // pro různé testovací účely  
         'TEST'=>0,
         /// informace o přístupu na gmailový účet  
-        'GMAIL'=>(object)array(
+        'SEZNAM'=>(object)array(
           /// přístup na použitý gmail
-          'mail'=>'web.evangelizacni.bunky@gmail.com',
+//          'mail'=>'web.evangelizacni.bunky@gmail.com',
+          'mail'=>'web.evangelizacni.bunky@seznam.cz',
           'pswd'=>'MeditacniZahrada',                   // POZOR musí být i v číselníku smtp_srv !!!
           'name'=>'Farní evangelizační buňky'
         ),

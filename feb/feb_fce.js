@@ -183,7 +183,7 @@ CKEDITOR.plugins.add('ezer', {
     // ---------------------------------------------- vložení obrázku
     editor.on('paste', function (evt) {
       // nalezení instance Ezer.EditHtml
-      var EditHtml= jQuery(editor.element.$.parentNode).data('ezer'), 
+      var EditHtml= jQuery(editor.element.$.parentNode.parentNode).data('ezer'), 
           LabelDrop= 0, ok= 1;
       ok= EditHtml.label_drop!=undefined;
       if ( ok ) {
