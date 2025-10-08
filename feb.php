@@ -14,8 +14,9 @@
   // parametry aplikace FEB
   $app_name=  "FEB...";
   $app_root=  'feb';
-  $app_js=    array('/feb/feb_user.js');
-  $app_css=   array('/feb/feb.css.php=skin',"/ezer$ezer_version/client/wiki.css");
+  $app_js=    array("feb/web_fce.js","feb/feb_fce.js","/ezer$ezer_version/client/ezer_cms3.js");
+  $app_css=   array("/feb/css/feb.css","/feb/css/edit.css",
+                    "/ezer$ezer_version/client/ezer_cms3.css");   
   $skin=      'ck';
   $title_style= $ezer_server==0 ? " style='color:#ef7f13'" : '' ;
   $title_flag=  $ezer_server==0 ? 'lokální' : '';
