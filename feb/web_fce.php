@@ -26,19 +26,20 @@ function page($ref,$full_page,$level=0) {
 # -------------------------------------------------------------------------------------==> connect
 // napojí databázi
 function connect() { 
-  global $ezer_db, $web_db;
-  $web_db= "feb";
-  // hostující servery
-  $ezer_server= 
-    $_SERVER["SERVER_NAME"]=='feb.bean'    ? 0 : (                      // 0:lokální 
-    $_SERVER["SERVER_NAME"]=='evangelizacnibunky.cz'     ? 1 : (        // 1:endora
-    $_SERVER["SERVER_NAME"]=='www.evangelizacnibunky.cz' ? 1 :  -1));   // 1:endora
-  $hst1= 'localhost';
-  $nam1= $ezer_server ? 'gandi'    : 'gandi';
-  $pas1= $ezer_server ? 'radost'   : 'radost';
-  $ezer_db= array( /* lokální */
-    $web_db  =>  array(0,$hst1,$nam1,$pas1,'utf8'),
-  );
+  global $ezer_db, $dbs; // $web_db, $ezer_server;
+//  $web_db= "feb";
+//  // hostující servery
+//  $ezer_server= 
+//    $_SERVER["SERVER_NAME"]=='feb.bean'    ? 0 : (                      // 0:lokální 
+//    $_SERVER["SERVER_NAME"]=='evangelizacnibunky.cz'     ? 1 : (        // 1:endora
+//    $_SERVER["SERVER_NAME"]=='www.evangelizacnibunky.cz' ? 1 :  -1));   // 1:endora
+//  $hst1= 'localhost';
+//  $nam1= $ezer_server ? 'gandi'    : 'gandi';
+//  $pas1= $ezer_server ? 'radost'   : 'radost';
+//  $ezer_db= array( /* lokální */
+//    $web_db  =>  array(0,$hst1,$nam1,$pas1,'utf8'),
+//  );
+  $ezer_db= $dbs;
   ezer_connect('feb');
 }
 # -------------------------------------------------------------------------------------==> def_menu
@@ -51,8 +52,8 @@ function read_menu($level=0) {
   connect();
   // načtení menu
   $menu= array();
-  $mn= mysql_qry("SELECT * FROM menu WHERE wid=2 AND typ>=0 ORDER BY typ,mid_top,rank");
-  while ($mn && ($m= mysql_fetch_object($mn))) {
+  $mn= pdo_qry("SELECT * FROM menu WHERE wid=2 AND typ>=0 ORDER BY typ,mid_top,rank");
+  while ($mn && ($m= pdo_fetch_object($mn))) {
 //    if ( $m->typ<0 ) continue; 
     if ( $m->typ==2 && !isset($menu[$m->mid_top]) ) continue; 
     // filtrace chráněných položek
@@ -283,7 +284,7 @@ function show_page($html,$full_page=0) {
   
   // jádro Ezer - jen pokud není aktivní CMS
   $script= '';
-  $client= "./ezer3.1/client";
+  $client= "./ezer3.3/client";
   // pokud není CMS nebude uživatel přihlášen - vstup do Ezer je přes _oninit
   $script.= $CMS ? '' : <<<__EOJ
     <script type="text/javascript">
@@ -294,7 +295,7 @@ function show_page($html,$full_page=0) {
       Ezer.fce= {};
       Ezer.str= {};
       Ezer.obj= {};
-      Ezer.version= '3.1'; Ezer.root= 'man'; Ezer.app_root= 'man'; 
+      Ezer.version= '3.3'; Ezer.root= 'man'; Ezer.app_root= 'man'; 
       Ezer.options= { /* load_ezer=$load_ezer */
         _oninit: 'skup_mapka',
         skin: 'db'
@@ -381,7 +382,7 @@ __EOD;
   }
   else {
   // dokončení stránky s minimem jádra Ezer3 potřebným pro ezer_cms3.js
-  $kernel= 'ezer3.1';
+  $kernel= 'ezer3.3';
   $head=  <<<__EOD
     <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
       "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -421,7 +422,7 @@ function menu_add_elem($mid,$table) {
   query("INSERT INTO $table (web_text) VALUES 
     ('<h1>Nadpis</h1><p>kontextové menu (pravé tlačítko myši) umožní editaci a posunutí 
     ... vytvořeno $ted</p>')");
-  $id= mysql_insert_id();
+  $id= pdo_insert_id();
   $elem= "$table=$id".($elem ? ";$elem" : '');
   query("UPDATE menu SET elem='$elem' WHERE wid=2 AND mid=$mid");
   return 1;
@@ -523,12 +524,12 @@ function menu_upd_akce($wid) {
   // odstraň staré podmenu
   query("DELETE FROM menu WHERE wid=$wid AND mid_top=$mid_akce",$web_db);
   // přidej nové podle tabulky akce
-  $ra= mysql_query("
+  $ra= pdo_query("
     SELECT id_akce,zacatek,web_stav,web_menu
     FROM akce WHERE web_stav>0
     ORDER BY zacatek DESC
   ");
-  while ( $ra && (list($ida,$zacatek,$stav,$menu)= mysql_fetch_array($ra)) ) {
+  while ( $ra && (list($ida,$zacatek,$stav,$menu)= pdo_fetch_array($ra)) ) {
     $n++;
     $level= $stav==2 ? 0 : TESTER;
     $rok= substr($zacatek,0,4);
@@ -553,12 +554,12 @@ function menu_upd_bunka($wid) {
   // odstraň staré podmenu
   query("DELETE FROM menu WHERE wid=$wid AND mid_top=$mid_akce",$web_db);
   // přidej nové podle tabulky cell
-  $ra= mysql_query("
+  $ra= pdo_query("
     SELECT id_cell,web_stav,web_menu
     FROM cell WHERE web_stav>0
     ORDER BY nazev DESC
   ");
-  while ( $ra && (list($idb,$stav,$menu)= mysql_fetch_array($ra)) ) {
+  while ( $ra && (list($idb,$stav,$menu)= pdo_fetch_array($ra)) ) {
     $n++;
     $level= $stav==2 ? 0 : TESTER;
     query("INSERT INTO menu (wid,mid_top,typ,rank,level,ref,nazev,elem) 
@@ -626,9 +627,9 @@ function menu_tree($wid) {
         )
       )
     );    
-  $mn= mysql_qry("SELECT * FROM menu WHERE wid=$wid ORDER BY typ,mid_top,rank",
+  $mn= pdo_qry("SELECT * FROM menu WHERE wid=$wid ORDER BY typ,mid_top,rank",
       0,0,0,$web_db);
-  while ( $mn && ($m= mysql_fetch_object($mn)) ) {
+  while ( $mn && ($m= pdo_fetch_object($mn)) ) {
     $mid_top= $m->mid_top;
     $typ= abs($m->typ);
     $nazev= $m->ref;
@@ -726,9 +727,9 @@ function cms_send_potvrzeni($email,$idl,$ida) {
 function feb_mail_send($address,$subject,$body,$reply='') { 
   global $EZER;
   $web_path= $_SESSION['web']['path'];
-  $phpmailer_path= "$web_path/ezer3.1/server/licensed/phpmailer";
+  $phpmailer_path= "$web_path/ezer3.3/server/licensed/phpmailer";
   $_SESSION['trace']['feb_mail_send-1']= $phpmailer_path;
-  $_SESSION['trace']['feb_mail_send-2']= file_exists("$web_path/ezer3.1/server/licensed/phpmailer") ? 1 : 0;
+  $_SESSION['trace']['feb_mail_send-2']= file_exists("$web_path/ezer3.3/server/licensed/phpmailer") ? 1 : 0;
   $_SESSION['trace']['feb_mail_send-3']= file_exists($phpmailer_path) ? 1 : 0;
   $_SESSION['trace']['feb_mail_send-4']= $EZER->CMS->SEZNAM;
   require_once("$phpmailer_path/class.phpmailer.php");

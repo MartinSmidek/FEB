@@ -72,7 +72,7 @@ function debug($x,$label=false,$options=null) {
     debug1($x,$label,$options);
   }
   else {
-//    $x= mysql_real_escape_string(var_export($x,true));
+//    $x= pdo_real_escape_string(var_export($x,true));
     $x= str_replace('"',"'",var_export($x,true));
     $x= str_replace("\n",'\n',$x);
     $stack= debug_backtrace();
@@ -165,8 +165,8 @@ function debugx(&$gt,$label=false,$html=0,$depth=64,$length=64,$win1250=0,$getty
 }
 function fce_error($x) {
   global $trace;
-//  if ( function_exists('mysql_real_escape_string') )
-//    $x= mysql_real_escape_string($x);
+//  if ( function_exists('pdo_real_escape_string') )
+//    $x= pdo_real_escape_string($x);
   global $CMS;
   $x= strtr($x,array('"'=>'`',"'"=>'`'));
   if ( $CMS ) {
@@ -257,52 +257,52 @@ function array2object(array $array) {
 //  // vlastní připojení, pokud nebylo ustanoveno
 //  $db_name= (isset($ezer_db[$db][5]) && $ezer_db[$db][5]!='') ? $ezer_db[$db][5] : $db;
 //  if ( !$ezer_db[$db][0] || $even ) {
-//    $ezer_db[$db][0]= @mysql_pconnect($ezer_db[$db][1],$ezer_db[$db][2],$ezer_db[$db][3]);
+//    $ezer_db[$db][0]= @pdo_pconnect($ezer_db[$db][1],$ezer_db[$db][2],$ezer_db[$db][3]);
 //    if ( !$ezer_db[$db][0] ) {
 //      fce_error("db=$db|connect: server '{$ezer_db[$db][1]}' s databazi '"
-//        . ($ezer_db[$db][5] ? "$db/$db_name" : $db)."' neni pristupny:").mysql_error();
+//        . ($ezer_db[$db][5] ? "$db/$db_name" : $db)."' neni pristupny:").pdo_error();
 //    }
 //  }
-//  $res= @mysql_select_db($db_name,$ezer_db[$db][0]);
+//  $res= @pdo_select_db($db_name,$ezer_db[$db][0]);
 //  if ( !$res ) {
 //    $ok= 0;
 //    $err= "databaze '$db_name' je nepristupna";
-//    if ( !$initial ) fce_error("connect: $err".mysql_error());
-//    else die("connect: $err".mysql_error());
+//    if ( !$initial ) fce_error("connect: $err".pdo_error());
+//    else die("connect: $err".pdo_error());
 //  }
 //  if ( $ezer_db[$db][4] ) {
-//    mysql_query("SET NAMES '{$ezer_db[$db][4]}'");
+//    pdo_query("SET NAMES '{$ezer_db[$db][4]}'");
 //  }
 //  return $err;
 //}
-# ---------------------------------------------------------------------------------------- mysql_row
-# provedení dotazu v $y->qry="..." a vrácení mysql_fetch_assoc (případně doplnění $y->err)
-function mysql_row($qry,$err=null) {
-  $res= mysql_qry($qry,1);
-  $row= $res ? mysql_fetch_assoc($res) : array();
-  if ( !$res ) mysql_err($qry);
+# ---------------------------------------------------------------------------------------- pdo_row
+# provedení dotazu v $y->qry="..." a vrácení pdo_fetch_assoc (případně doplnění $y->err)
+function pdo_row($qry,$err=null) {
+  $res= pdo_qry($qry,1);
+  $row= $res ? pdo_fetch_assoc($res) : array();
+  if ( !$res ) pdo_err($qry);
   return $row;
 }
-# ------------------------------------------------------------------------------------- mysql_object
-# provedení dotazu v $y->qry="..." a vrácení mysql_fetch_object (případně doplnění $y->err)
-function mysql_object($qry,$err=null) {
-  $res= mysql_qry($qry,1);
-  $x= $res ? mysql_fetch_object($res) : array();
-  if ( !$res ) mysql_err($qry);
-  return $x;
-}
+//# ------------------------------------------------------------------------------------- pdo_object
+//# provedení dotazu v $y->qry="..." a vrácení pdo_fetch_object (případně doplnění $y->err)
+//function pdo_object($qry,$err=null) {
+//  $res= pdo_qry($qry,1);
+//  $x= $res ? pdo_fetch_object($res) : array();
+//  if ( !$res ) pdo_err($qry);
+//  return $x;
+//}
 # ------------------------------------------------------------------------------------- getmicrotime
 function getmicrotime() {
 //   list($usec, $sec) = explode(" ", microtime());
 //   return ((float)$usec + (float)$sec);
   return round(microtime(true)*1000);
 }
-# ---------------------------------------------------------------------------------------- mysql_err
+# ---------------------------------------------------------------------------------------- pdo_err
 # ošetření chyby a doplnění $y->error, $y->ok
-function mysql_err($qry) {
+function pdo_err($qry) {
   global $y;
   $msg= '';
-  $merr= mysql_error();
+  $merr= pdo_error();
   $serr= "You have an error in your SQL";
   if ( $merr && substr($merr,0,strlen($serr))==$serr ) {
     $msg.= "SQL error ".substr($merr,strlen($serr))." in:$qry";
@@ -315,7 +315,7 @@ function mysql_err($qry) {
   $y->ok= 'ko';
   fce_error($msg);
 }
-//# ---------------------------------------------------------------------------------------- mysql_qry
+//# ---------------------------------------------------------------------------------------- pdo_qry
 //# provedení dotazu a textu v $y->qry="..." a případně doplnění $y->err
 //#   $qry      -- SQL dotaz
 //#   $pocet    -- pokud je uvedeno, testuje se a při nedodržení se ohlásí chyba
@@ -324,7 +324,7 @@ function mysql_err($qry) {
 //#                pokud $err=='-' nebude generována chyba a funkce vrátí false
 //#   $to_throw -- chyba způsobí výjimku
 //#   $db       -- před dotazem je přepnuto na databázi daného jména v tabulce $ezer_db nebo na hlavní
-//function mysql_qry($qry,$pocet=null,$err=null,$to_throw=false,$db='') {
+//function pdo_qry($qry,$pocet=null,$err=null,$to_throw=false,$db='') {
 //  global $trace, $y, $totrace, $qry_del, $qry_count, $ezer_db;
 //  if ( !isset($y) ) $y= (object)array();
 //  $msg= ''; $abbr= '';
@@ -335,12 +335,12 @@ function mysql_err($qry) {
 //  $time_start= getmicrotime();
 //  // přepnutí na databázi
 //  if ( $db ) ezer_connect($db);
-//  $res= @mysql_query($qry);
+//  $res= @pdo_query($qry);
 //  $time= round(getmicrotime() - $time_start,4);
 //  $ok= $res ? 'ok' : '--';
 //  if ( !$res ) {
 //    if ( $err=='-' ) goto end;
-//    $merr= mysql_error();
+//    $merr= pdo_error();
 //    $serr= "You have an error in your SQL";
 //    if ( $merr && substr($merr,0,strlen($serr))==$serr ) {
 //      $msg.= "SQL error ".substr($merr,strlen($serr))." in:$qry";
@@ -362,11 +362,11 @@ function mysql_err($qry) {
 //  // pokud byl specifikován očekávaný počet, proveď kontrolu
 //  else if ( $pocet  ) {
 //    if ( substr($qry,0,6)=='SELECT' )
-//      $num= mysql_num_rows($res);
+//      $num= pdo_num_rows($res);
 //    elseif ( in_array(substr($qry,0,6),array('INSERT','UPDATE','REPLAC','DELETE')) )
-//      $num= mysql_affected_rows(); // INSERT, UPDATE, REPLACE or DELETE
+//      $num= pdo_affected_rows(); // INSERT, UPDATE, REPLACE or DELETE
 //    else
-//      fce_error("mysql_qry: neznámá operace v $qry");
+//      fce_error("pdo_qry: neznámá operace v $qry");
 //    if ( $pocet!=$num ) {
 //      if ( $num==0 ) {
 //        $msg.= "nenalezen záznam " . ($err ? ", $err" : ""). " v $qry";
@@ -388,7 +388,7 @@ function mysql_err($qry) {
 //      $trace.= "SQL: $qry<br>";
 //    }
 //    else {
-//      $qry= mysql_real_escape_string((isset($y->qry)?"\n":'')."$ok $time \"$myqry\" ");
+//      $qry= pdo_real_escape_string((isset($y->qry)?"\n":'')."$ok $time \"$myqry\" ");
 //      $trace.= "<script>console.log( \"SQL: $qry \");</script>";
 //    }
 //  }
@@ -410,22 +410,22 @@ function select($expr,$table,$cond=1,$db='.main.') {
   if ( strstr($expr,",") ) {
     $result= array();
     $qry= "SELECT $expr FROM $table WHERE $cond";
-    $res= mysql_qry($qry,0,0,0,$db);
-    if ( !$res ) { fce_error("chyba funkce select:$qry/".mysql_error()); goto end; }
-    $result= mysql_fetch_row($res);
+    $res= pdo_qry($qry,0,0,0,$db);
+    if ( !$res ) { fce_error("chyba funkce select:$qry/".pdo_error()); goto end; }
+    $result= pdo_fetch_row($res);
   }
   elseif ( $expr=='*' ) {
     $qry= "SELECT * FROM $table WHERE $cond";
-    $res= mysql_qry($qry,0,0,0,$db);
-    if ( !$res ) fce_error(wu("chyba funkce select:$qry/".mysql_error()));
-    $result= mysql_fetch_object($res);
+    $res= pdo_qry($qry,0,0,0,$db);
+    if ( !$res ) fce_error(wu("chyba funkce select:$qry/".pdo_error()));
+    $result= pdo_fetch_object($res);
   }
   else {
     $result= '';
     $qry= "SELECT $expr AS _result_ FROM $table WHERE $cond";
-    $res= mysql_qry($qry,0,0,0,$db);
-    if ( !$res ) fce_error(wu("chyba funkce select:$qry/".mysql_error()));
-    $o= mysql_fetch_object($res);
+    $res= pdo_qry($qry,0,0,0,$db);
+    if ( !$res ) fce_error(wu("chyba funkce select:$qry/".pdo_error()));
+    $o= pdo_fetch_object($res);
     $result= $o->_result_;
   }
 //                                                 debug($result,"select");
@@ -437,35 +437,35 @@ end:
 function select1($expr,$table,$cond=1,$db='.main.') {
   $result= '';
   $qry= "SELECT $expr AS _result_ FROM $table WHERE $cond";
-  $res= mysql_qry($qry,0,0,0,$db);
-  if ( !$res ) fce_error(wu("chyba funkce select1:$qry/".mysql_error()));
-  $o= mysql_fetch_object($res);
+  $res= pdo_qry($qry,0,0,0,$db);
+  if ( !$res ) fce_error(wu("chyba funkce select1:$qry/".pdo_error()));
+  $o= pdo_fetch_object($res);
   $result= $o->_result_;
   return $result;
 }
 # ------------------------------------------------------------------------------------ select_object
-# navrácení hodnot jednoduchého jednoznačného dotazu jako objektu (funkcí mysql_fetch_object)
+# navrácení hodnot jednoduchého jednoznačného dotazu jako objektu (funkcí pdo_fetch_object)
 function select_object($expr,$table,$cond=1,$db='.main.') {
   $qry= "SELECT $expr FROM $table WHERE $cond";
-  $res= mysql_qry($qry,0,0,0,$db);
-  if ( !$res ) fce_error(wu("chyba funkce select_object:$qry/".mysql_error()));
-  $result= mysql_fetch_object($res);
+  $res= pdo_qry($qry,0,0,0,$db);
+  if ( !$res ) fce_error(wu("chyba funkce select_object:$qry/".pdo_error()));
+  $result= pdo_fetch_object($res);
   return $result;
 }
 # -------------------------------------------------------------------------------------------- query
 # provedení MySQL dotazu
 function query($qry,$db='.main.') {
-  $res= mysql_qry($qry,0,0,0,$db);
-  if ( !$res ) fce_error(wu("chyba funkce query:$qry/".mysql_error()));
+  $res= pdo_qry($qry,0,0,0,$db);
+  if ( !$res ) fce_error(wu("chyba funkce query:$qry/".pdo_error()));
   return $res;
 }
 # ---------------------------------------------------------------------------------------- sql_query
 # provedení MySQL dotazu
 function sql_query($qry,$db='.main.') {
   $obj= (object)array();
-  $res= mysql_qry($qry,0,0,0,$db);
+  $res= pdo_qry($qry,0,0,0,$db);
   if ( $res ) {
-    $obj= mysql_fetch_object($res);
+    $obj= pdo_fetch_object($res);
   }
   return $obj;
 }
@@ -539,18 +539,18 @@ function sql_date ($datum,$user2sql=0) {
 # 3. ezer_qry("UPDATE_keys",$table,$keys,$zmeny[,$key_id]);    -- hromadná oprava pro key IN ($keys)
 #     zmeny= { fld:field, op:m|p|a, val:value}                    -- SET fld=value
 //function user_test() {
-//  global $mysql_db_track, $USER;
-//  if ( $mysql_db_track && !$USER->abbr ) {
+//  global $pdo_db_track, $USER;
+//  if ( $pdo_db_track && !$USER->abbr ) {
 //    fce_error("Vaše přihlášení již vypršelo - přihlaste se prosím znovu a operaci opakujte");
 //  }
 //}
 function ezer_qry ($op,$table,$cond_key,$zmeny,$key_id='') {
-  global $json, $mysql_db, $mysql_db_track, $mysql_tracked, $USER;
+  global $json, $pdo_db, $pdo_db_track, $pdo_tracked, $USER;
 //                                                         debug($zmeny,"qry_update($op,$table,$cond_key)");
   $result= 0;
   $tracked= array();
   $keys= '???';                 // seznam klíčů
-  $tab= str_replace("$mysql_db.",'',$table);
+  $tab= str_replace("$pdo_db.",'',$table);
   if ( !$key_id ) $key_id= $tab=='pdenik' ? 'id_pokl' : str_replace('__','_',"id_$tab");
   $user= isset($USER->abbr) ? $USER->abbr : 'WEB';
 //  user_test();
@@ -564,7 +564,7 @@ function ezer_qry ($op,$table,$cond_key,$zmeny,$key_id='') {
       $fld= $zmena->fld;
       if ( $fld!='zmena_kdo' && $fld!='zmena_kdy' ) $tracked[0][]= $zmena;
       if ( $fld=='id_cis' ) $id_cis= $zmena->val;
-      $val= mysql_real_escape_string($zmena->val);
+      $val= pdo_real_escape_string($zmena->val);
       $flds.= "$del$fld";
       $vals.= "$del'$val'";
       $del= ',';
@@ -572,8 +572,8 @@ function ezer_qry ($op,$table,$cond_key,$zmeny,$key_id='') {
     // provedení INSERT
     $key_val= 0;
     $qry= "INSERT INTO $table ($flds) VALUES ($vals)";
-    $res= mysql_qry($qry);
-    $result= $tab=="_cis" ?  $id_cis : mysql_insert_id();
+    $res= pdo_qry($qry);
+    $result= $tab=="_cis" ?  $id_cis : pdo_insert_id();
     $keys= $result;
     break;
   case 'UPDATE':
@@ -583,7 +583,7 @@ function ezer_qry ($op,$table,$cond_key,$zmeny,$key_id='') {
     foreach ($zmeny as $zmena) {
       $fld= $zmena->fld;
       if ( $fld!='zmena_kdo' && $fld!='zmena_kdy' ) $tracked[0][]= $zmena;
-      $val= mysql_real_escape_string($zmena->val);
+      $val= pdo_real_escape_string($zmena->val);
       switch ( $zmena->op ) {
       case 'a':
         $set.= "$del$fld=concat($fld,'$val')";
@@ -593,15 +593,15 @@ function ezer_qry ($op,$table,$cond_key,$zmeny,$key_id='') {
         break;
       case 'd': // delete záznam row v chat
         $va= explode('|',$zmena->old);
-        $old= mysql_real_escape_string($zmena->old);
+        $old= pdo_real_escape_string($zmena->old);
         $zmena->old_val= "{$va[2*$zmena->row-2]}|{$va[2*$zmena->row-1]}";
         unset($va[2*$zmena->row-2],$va[2*$zmena->row-1]);
-        $vn= mysql_real_escape_string(implode('|',$va));
+        $vn= pdo_real_escape_string(implode('|',$va));
         $set.= "$del$fld='$vn'";
         $and.= " AND $fld='$old'";
         break;
       case 'c': // change záznam row v chat
-        $old= mysql_real_escape_string($zmena->old);
+        $old= pdo_real_escape_string($zmena->old);
         $va= explode('|',$old);
         $zmena->old_val= "{$va[2*$zmena->row-2]}|{$va[2*$zmena->row-1]}";
         $va[2*$zmena->row-1]= $val;
@@ -613,7 +613,7 @@ function ezer_qry ($op,$table,$cond_key,$zmeny,$key_id='') {
       case 'U': // určeno pro hromadné změny
         $set.= "$del$fld='$val'";
         if ( isset($zmena->old) ) {
-          $old= mysql_real_escape_string($zmena->old);
+          $old= pdo_real_escape_string($zmena->old);
           $and.= " AND $fld='$old'";
         }
         break;
@@ -626,9 +626,9 @@ function ezer_qry ($op,$table,$cond_key,$zmeny,$key_id='') {
     // provedení UPDATE pro jeden záznam s kontrolou starých hodnot položek
     $key_val= $cond_key;
     $qry= "SELECT $key_id FROM $table WHERE $key_id=$key_val $and ";
-    if ( mysql_qry($qry,1) )  {
+    if ( pdo_qry($qry,1) )  {
       $qry= "UPDATE $table SET $set WHERE $key_id=$key_val $and ";
-      mysql_qry($qry);
+      pdo_qry($qry);
       $result= 1;
     }
     $keys= $key_val;
@@ -643,14 +643,14 @@ function ezer_qry ($op,$table,$cond_key,$zmeny,$key_id='') {
     }
     $keys= implode(',',$akeys);
     $fld= $zmeny->fld;
-    $val= mysql_real_escape_string($zmeny->val);
+    $val= pdo_real_escape_string($zmeny->val);
     switch ( $zmeny->op ) {
     case 'm':
       // zjištění starých hodnot podle seznamu klíčů
       $qry= "SELECT GROUP_CONCAT($fld SEPARATOR '|') as $fld FROM $table WHERE $key_id IN ($keys)";
-      $res= mysql_qry($qry);
+      $res= pdo_qry($qry);
       if ( $res ) {
-        $row= mysql_fetch_assoc($res);
+        $row= pdo_fetch_assoc($res);
         foreach (explode('|',$row[$fld]) as $i => $old) {
           $tracked[$i][0]->old= $old;
         }
@@ -669,7 +669,7 @@ function ezer_qry ($op,$table,$cond_key,$zmeny,$key_id='') {
     }
     // provedení UPDATE pro záznamy podle seznamu klíčů
 //                                                         display($qry);
-    mysql_qry($qry);
+    pdo_qry($qry);
     break;
   default:
     fce_error("ezer_qry: operace $op neimplementována");
@@ -679,7 +679,7 @@ function ezer_qry ($op,$table,$cond_key,$zmeny,$key_id='') {
     $table= explode('.',$table);
     $table= $table[count($table)-1];
   }
-  if ( $mysql_db_track && count($tracked)>0 && strpos($mysql_tracked,",$table,")!==false ) {
+  if ( $pdo_db_track && count($tracked)>0 && strpos($pdo_tracked,",$table,")!==false ) {
     $qry= "";
     $now= date("Y-m-d H:i:s");
     $del= '';
@@ -691,21 +691,21 @@ function ezer_qry ($op,$table,$cond_key,$zmeny,$key_id='') {
         switch ($op) {
         case 'd':
           $val= '';
-          $old= mysql_real_escape_string($zmena->old_val);
+          $old= pdo_real_escape_string($zmena->old_val);
           break;
         case 'c':
-          $val= mysql_real_escape_string($zmena->val);
-          $old= mysql_real_escape_string($zmena->old_val);
+          $val= pdo_real_escape_string($zmena->val);
+          $old= pdo_real_escape_string($zmena->old_val);
           break;
         default:
           // zmena->pip je definovaná ve form_save v případech zápisu hodnoty přes sql_pipe
-          $val= mysql_real_escape_string($zmena->val);
-          $old= $zmena->old ? mysql_real_escape_string($zmena->old) : (
-                $zmena->pip ? mysql_real_escape_string($zmena->pip) : '');
+          $val= pdo_real_escape_string($zmena->val);
+          $old= $zmena->old ? pdo_real_escape_string($zmena->old) : (
+                $zmena->pip ? pdo_real_escape_string($zmena->pip) : '');
           break;
         }
         $qry= "$qry_prefix,'$fld','$op','$old','$val'); ";
-        $res= mysql_qry($qry);
+        $res= pdo_qry($qry);
 //                                                 display("TRACK: $qry");
       }
     }

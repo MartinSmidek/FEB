@@ -1,69 +1,69 @@
 <?php
-
-  // volba verze jádra Ezer
-  $kernel= "ezer".(isset($_GET['ezer'])?$_GET['ezer']:'3.1'); 
-  $kernel= "ezer3.1"; 
+# Aplikace FEB pro Komunitu blahoslavenství
+# (c) 2017-2025 Martin Šmídek <martin@smidek.eu>
   
-  // hostující servery
-  $ezer_server= 
-    $_SERVER["SERVER_NAME"]=='feb.bean'    ? 0 : (                      // 0:lokální 
-    $_SERVER["SERVER_NAME"]=='evangelizacnibunky.cz'     ? 1 : (        // 1:endora
-    $_SERVER["SERVER_NAME"]=='www.evangelizacnibunky.cz' ? 1 :  -1));   // 1:endora
+  // verze použitého jádra Ezeru
+  $ezer_version= isset($_GET['ezer']) ? $_GET['ezer'] : '3.3'; 
+  $_GET['pdo']= 2; 
+  $_GET['touch']= 0; // nezavede jquery.touchSwipe.min.js => filtry v browse jdou upravit myší
+
+  // servery a jejich cesty
+  $deep_root= "../files/feb";
+  require_once("$deep_root/feb.dbs.php");
 
   // parametry aplikace FEB
-  $app_name=  'evangelizační buňky';
+  $app_name=  "FEB...";
   $app_root=  'feb';
+  $app_js=    array('/feb/feb_user.js');
+  $app_css=   array('/feb/feb.css.php=skin',"/ezer$ezer_version/client/wiki.css");
   $skin=      'ck';
-  $app_js=    array("feb/web_fce.js","feb/feb_fce.js","$kernel/client/ezer_cms3.js");
-  $app_css=   array("feb/css/feb.css","feb/css/edit.css",
-                    "$kernel/client/ezer_cms3.css"); //,"$kernel/client/wiki.css");
+  $title_style= $ezer_server==0 ? " style='color:#ef7f13'" : '' ;
+  $title_flag=  $ezer_server==0 ? 'lokální' : '';
 
-  // cesty
-  $abs_roots= array("C:/Ezer/beans/feb","/home/users/gandi/evangelizacnibunky.cz/web");
-  $rel_roots= array("http://feb.bean:8080","https://evangelizacnibunky.cz");
+  $continue= array(1,1,1);
+  if (!$continue[$ezer_server] && !isset($_GET['go'])) die('Web under construction');
 
-  $kontakt=   "V případě zjištění problému nebo <br/>potřeby konzultace mi prosím napište<br/>
-      na mail martin<i class='fa fa-at'></i>smidek.eu případně zavolejte 306&nbsp;150&nbsp;565
-      <br/>Za spolupráci děkuje <br/>Martin Šmídek";
-  
-  $add_options= (object)array(
-    'mini_debug' => 1,
-    'path_files_href' => "'$rel_roots[$ezer_server]'",
-    'path_files_s' => "'$abs_roots[$ezer_server]/'"  // absolutní cesta pro přílohy
-  );
+  // (re)definice Ezer.options
+  $kontakt= " V případě zjištění problému nebo <br/>potřeby konzultace mi prosím napište<br/>na "
+      . "mail&nbsp;<a target='mail' href='mailto:martin@smidek.eu?subject=FiS'>martin@smidek.eu</a> "
+      . "případně zavolejte&nbsp;603 150 565 "
+      . "<br/>Za spolupráci děkuje <br/>Martin";
+
+  // upozornění na testovací verzi
+  $demo= '';
+//  $click= "jQuery('#DEMO').fadeOut(500);";
+//  $dstyle= "left:0; top:0; position:fixed; transform:rotate(320deg) translate(-128px,-20px); "
+//      . "width:500px;height:100px;background:orange; color:white; font-weight: bolder; "
+//      . "text-align: center; font-size: 38px; line-height: 44px; z-index: 16; opacity: .5;";
+//  $demo= "<div id='DEMO' onmouseover=\"$click\" style='$dstyle'>testovací data<br>funkce bez záruky</div>";
+
   $add_pars= array(
+    'favicon' => $favicon,
+//    'title_right' => "<span$title_style>$title_flag $app_name ...</span>$demo",
+    'watch_key' => 1,   // true = povolit přístup jen po vložení klíče
+    'watch_ip' => 1,    // true = povolit přístup jen ze známých IP adres
+    'contact' => $kontakt,
     'CKEditor' => "{
       version:'4.6',
-      FEB:{
-        skin:'moono-lisa',
-        toolbar:[['Maximize','Styles','-','Bold','Italic','TextColor','BGColor', 'RemoveFormat',
-          '-','JustifyLeft','JustifyCenter','JustifyRight','JustifyBlock', 'Outdent', 'Indent', 'Blockquote',
-          '-','NumberedList','BulletedList','Table',
-          '-','Link','Unlink','HorizontalRule','Image','Embed',
-          '-','Source','ShowBlocks','RemoveFormat']],
-        // Configure the Enhanced Image plugin to use classes instead of styles and to disable the
-        // resizer (because image size is controlled by widget styles or the image takes maximum
-        // 100% of the editor width).
-        image2_alignClasses: [ 'image-align-left', 'image-align-center', 'image-align-right' ],
-        image2_disableResizer: false,
-        extraPlugins:'widget,filetools,embed,ezer',
-        entities:true,  // →
-        embed_provider: '//iframe.ly/api/oembed?url={url}&callback={callback}&api_key=313b5144bfdde37b95c235',
-        uploadUrl:'feb/upload.php?root=feb&type=Images',
-        stylesSet:[
-          {name:'název',     element:'h1'},
-          {name:'nadpis',    element:'h2'},
-          {name:'podnadpis', element:'h3'},
-          {name:'odstavec',  element:'p'},
-          {name:'odstavec!', element:'p',   attributes:{'class':'p-clear'}}
-        ],
-        contentsCss:'feb/css/edit.css'
-      }
+      Minimal:{toolbar:[['Bold','Italic','Source']]},
+      Letter:{toolbar:[['Format','Bold','Italic','Underline'],['Table'],
+        ['JustifyLeft','JustifyCenter','JustifyRight'],['Source']]},
+      Letter2:{toolbar:[['PasteFromWord',
+        '-','Format','Bold','Italic','TextColor','BGColor',
+        '-','JustifyLeft','JustifyCenter','JustifyRight',
+        '-','Link','Unlink','HorizontalRule','Image',
+        '-','NumberedList','BulletedList',
+        '-','Outdent','Indent',
+      '-','Source','ShowBlocks','RemoveFormat']]}
     }"
   );
-  // je to standardní aplikace se startem v kořenu
-//  $api_key= "AIzaSyCUxpFqLlYPHFzwY63mVcmFcFgF4TYfzyQ"; // Google Maps JavaScript API 'EvangeliacniBunky'
-  $api_key= "AIzaSyAq3lB8XoGrcpbCKjWr8hJijuDYzWzImXo"; // Google Maps JavaScript API 'answer-test'
-  require_once("$kernel/ezer_main.php");
+  $add_options= (object)array(
+    'login_interval' => 8*60,           // povolená nečinnost v minutách - 8 hodin
+    'path_files_u'    => "'$abs_root'", // absolutní cesta do kořene aplikace
+  );
+
+  
+  // je to aplikace se startem v rootu
+  require_once("ezer$ezer_version/ezer_main.php");
 
 ?>

@@ -72,7 +72,7 @@ end:
 # přidat adresáty z jiné tabulky
 function feb_pack_menit_lidi_12($idp,$on,$rel,$tab,$id_tab) {
   $difs= 0;
-  $rl= mysql_qry("SELECT id_lidi FROM $rel WHERE id_$tab=$id_tab");
+  $rl= pdo_qry("SELECT id_lidi FROM $rel WHERE id_$tab=$id_tab");
   $difs+= feb_pack_menit($idp,$on,$rl);
   return $difs;
 }
@@ -82,13 +82,13 @@ function feb_pack_menit_lidi_3($idp,$on,$kneze,$vedouci,$cleny) {
   $difs= 0;
   // podle vlastností
   if ( $kneze ) {
-    $rl= mysql_qry("SELECT id_lidi FROM lidi WHERE !deleted AND knez=1");
+    $rl= pdo_qry("SELECT id_lidi FROM lidi WHERE !deleted AND knez=1");
     $difs+= feb_pack_menit($idp,$on,$rl);
   }
   //  podle roli v bunk-ma-lidi
   if ( $vedouci || $cleny ) {
     $cond= "funkce & ".(($vedouci?1:0) | ($cleny?2:0));
-    $rl= mysql_qry("SELECT id_lidi FROM ma JOIN lidi USING (id_lidi) WHERE !deleted AND $cond");
+    $rl= pdo_qry("SELECT id_lidi FROM ma JOIN lidi USING (id_lidi) WHERE !deleted AND $cond");
     $difs+= feb_pack_menit($idp,$on,$rl);
   }
   return $difs;
@@ -97,16 +97,16 @@ function feb_pack_menit_lidi_3($idp,$on,$kneze,$vedouci,$cleny) {
 # přidat vybrané adresáty - $rl musí vracet id_lidi
 function feb_pack_menit($idp,$on,$rl) {
   $difs= 0;
-  while ( $rl && list($idl)= mysql_fetch_row($rl) ) {
+  while ( $rl && list($idl)= pdo_fetch_row($rl) ) {
     list($idg,$stav)= select('id_go,stav','go',"id_pack=$idp AND id_lidi=$idl");
     if ( !$idg && $on ) {
       query("INSERT INTO go (id_pack,id_lidi,stav) VALUE ($idp,$idl,0)");
-      $difs+= mysql_affected_rows();
+      $difs+= pdo_affected_rows();
     }
     if ( $idg && !$on && $stav!=5 ) {
       // odeber pouze ještě neodeslané maily
       query("DELETE FROM go WHERE id_go=$idg");
-      $difs+= mysql_affected_rows();
+      $difs+= pdo_affected_rows();
     }
   }
   return $difs;
@@ -315,8 +315,8 @@ function feb_sestava_lidi($par,$export=false) {
          GROUP BY id_lidi         
          ORDER BY $ord " : ''
   );
-  $res= mysql_qry($qry);
-  while ( $res && ($x= mysql_fetch_object($res)) ) {
+  $res= pdo_qry($qry);
+  while ( $res && ($x= pdo_fetch_object($res)) ) {
     $n++;
     $clmn[$n]= array();
     // doplnění počítaných položek
@@ -519,7 +519,7 @@ function lidi_spojit($orig,$dupl,$upd) {
     // přenesení spojek
     foreach( array('je'=>'farnost','ma'=>'buňka','na'=>'akce') as $r=>$rr ) {
       query("UPDATE $r SET id_lidi=$orig WHERE id_lidi=$dupl");
-      $y->msg.= " ".mysql_affected_rows()." x přesunut v '$rr' ";
+      $y->msg.= " ".pdo_affected_rows()." x přesunut v '$rr' ";
     }
   }
   else {
@@ -536,13 +536,13 @@ function feb_random($table) {
 //    query("TRUNCATE TABLE lidi",'feb');
 //    $osoby= $lidi= array(); $n= 0;
 //    $polozek= 4;
-//    $tr= mysql_qry("
+//    $tr= pdo_qry("
 //      SELECT jmeno,prijmeni,ulice,CONCAT(psc,'*',obec)
 //      FROM ezer_db2.osoba 
 //      WHERE deleted='' AND LEFT(prijmeni,1)!='-'
 //        AND psc BETWEEN '75000' AND '78999'
 //      LIMIT $count");
-//    while ( $tr && ($osoba= mysql_fetch_row($tr)) ) {
+//    while ( $tr && ($osoba= pdo_fetch_row($tr)) ) {
 //      for ($i= 0; $i<$polozek; $i++) {
 //        $osoby[$i][$n]= $osoba[$i];
 //      }

@@ -1,18 +1,24 @@
 <?php
-
+# Aplikace FEB pro Komunitu blahoslavenství
+# (c) 2017-2025 Martin Šmídek <martin@smidek.eu>
+  
 //echo("Stranky http://www.evangelizacnibunky.cz jsou docasne mimo provoz, "
 //    . "<br>pripravujeme jejich novou verzi, "
 //    . "<br>budou v provozu behem kratke doby. "
 //    . "<br>Dekujeme za pochopeni."
 //    . "<br><br><br><br>");
+//exit();
+
+$ezer_version= isset($_GET['ezer']) ? $_GET['ezer'] : '3.3'; 
+$_GET['pdo']= 2; 
+$_GET['touch']= 0; // nezavede jquery.touchSwipe.min.js => filtry v browse jdou upravit myší
 
 $cms= 'man';
 $index= "index.php";
-// hostující servery
-$ezer_server= 
-    $_SERVER["SERVER_NAME"]=='feb.bean'    ? 0 : (                      // 0:lokální 
-    $_SERVER["SERVER_NAME"]=='evangelizacnibunky.cz'     ? 1 : (        // 1:endora
-    $_SERVER["SERVER_NAME"]=='www.evangelizacnibunky.cz' ? 1 :  -1));   // 1:endora
+
+// servery a jejich cesty
+$deep_root= "../files/feb";
+require_once("$deep_root/feb.dbs.php");
 
 # ------------------------------------------ init
 
@@ -27,13 +33,13 @@ if ( isset($_GET['err']) && $_GET['err'] ) {
 else 
   error_reporting(0);
 
-const EZER_PDO_PORT=1;
-require_once("ezer3.1/mysql.inc.php");
-require_once("ezer3.1/server/ezer_pdo.php");
+const EZER_PDO_PORT= 2;
+require_once("ezer$ezer_version/pdo.inc.php");
+require_once("ezer$ezer_version/server/ezer_pdo.php");
 require_once("feb/web_fce.php");
 require_once("feb/mini.php");
-require_once("ezer3.1/server/ezer_cms3.php");
-require_once("feb/feb.par.php");
+require_once("ezer$ezer_version/server/ezer_cms3.php");
+//require_once("feb/feb.par.php");
 
 # ------------------------------------------ ajax
 //if ( isset($_GET['mail']) && $_GET['mail']=='me' ) {
@@ -82,10 +88,10 @@ $fe_level= isset($_SESSION['web']['fe_level']) ? $_SESSION['web']['fe_level'] : 
 //  $GET_rok= isset($_GET['rok']) ? $_GET['rok'] : '';
 
   // absolutní cesta
-  $ezer_path_root= $_SESSION['web']['path']= array(
-      "C:/Ezer/beans/feb",
-      "/home/users/gandi/evangelizacnibunky.cz/web"
-  )[$ezer_server];
+//  $ezer_path_root= $_SESSION['web']['path']= array(
+//      "C:/Ezer/beans/feb",
+//      "/home/users/gandi/evangelizacnibunky.cz/web"
+//  )[$ezer_server];
   global $CMS, $load_ezer;
   $CMS= 0;
   //require_once("man/2template_ch.php");
